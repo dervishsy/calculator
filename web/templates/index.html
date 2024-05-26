@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Calculator</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Expression Calculator</h1>
+        <div class="input-section">
+            <input type="text" id="expressionInput" placeholder="Enter an expression">
+            <button id="submitButton">Submit</button>
+        </div>
+        <div class="expressions-list">
+            <h2>Expressions</h2>
+            <ul id="expressionsList"></ul>
+        </div>
+        <div class="container">
+            <!-- ... остальной HTML-код ... -->
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+    </div>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

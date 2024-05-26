@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-section {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+#expressionInput {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#submitButton {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.expressions-list {
+    margin-top: 20px;
+}
+
+.expressions-list h2 {
+    margin-bottom: 10px;
+}
+
+.expressions-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.expressions-list li {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+}
+
+.expressions-list li.completed {
+    background-color: lightgreen;
+}
+.expressions-list li.notcompleted {
+    background-color: rgb(238, 189, 144);
+}
+.error-message {
+    background-color: #ff7f7f;
+    color: white;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+    display: none; /* Изначально сообщение скрыто */
+}

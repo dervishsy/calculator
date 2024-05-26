@@ -1,0 +1,32 @@
+version: '3'
+services:
+
+  orchestrator:
+    environment:
+      - SERVER_PORT=8089
+      - TIME_ADDITION_MS=1000
+      - TIME_SUBTRACTION_MS=2000
+      - TIME_MULTIPLICATIONS_MS=4000
+      - TIME_DIVISIONS_MS=3000
+    build:
+      context: .
+      dockerfile: "./orchestrator/Dockerfile"
+    ports:
+      - "8080:8089"
+    networks:
+      - app-net
+
+  agent:
+    environment:
+      - ORCHESTRATOR_URL=http://orchestrator:8089
+      - COMPUTING_POWER=2
+    build:
+      context: .
+      dockerfile: "./agent/Dockerfile"
+    depends_on:
+      - orchestrator
+    networks:
+      - app-net
+
+networks:
+  app-net:
