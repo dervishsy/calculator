@@ -1,17 +1,18 @@
+// Initialization of variables
 const expressionInput = document.getElementById('expressionInput');
 const submitButton = document.getElementById('submitButton');
 const expressionsList = document.getElementById('expressionsList');
 const errorMessage = document.getElementById('errorMessage');
 
-let intervalId; // Переменная для хранения идентификатора интервала
-let expressions = []; // Массив для хранения выражений на клиенте
+let intervalId; // Interval variable for periodic updates
+let expressions = []; // Expression array for rendering
 
-// Функция для периодического обновления списка выражений
+// Periodic updates of the expression list
 function updateExpressionsList() {
     fetchExpressions();
 }
 
-// Функция для отправки выражения на сервер
+// Submit an expression to the server
 function submitExpression() {
     id = generateUUID()
     const expression = expressionInput.value.trim();
@@ -31,10 +32,11 @@ function submitExpression() {
         .then(response => {
             if (response.ok) {
                 expressionInput.value = '';
-                // Добавляем выражение в массив
+                // Add the expression to the array
                 expressions.push({ expression: expression, id: id, status: 'Pending', result: null });
                 renderExpressions()
             } else {
+                // Show error message if the request was not successful
                 console.error('Error submitting expression:', response.status);
                 response.text().then(errorText => {
                     showErrorMessage(`Error submitting expression: ${response.status}`, errorText);
@@ -47,25 +49,25 @@ function submitExpression() {
     }
 
 }
-// Функция для получения списка выражений с сервера
+// Fetch the list of expressions from the server
 function fetchExpressions() {
     fetch('/api/v1/expressions')
         .then(response => response.json())
         .then(data => {
-            expressions = data.expressions; // Обновляем массив выражений
+            expressions = data.expressions; // Update the expression array with the fetched data
             renderExpressions();
         })
         .catch(error => console.error('Error fetching expressions:', error));
 }
 
-// Функция для отрисовки списка выражений
+// Render the list of expressions on the page
 function renderExpressions() {
     expressionsList.innerHTML = '';
     expressions.forEach(expression => {
         const listItem = document.createElement('li');
         listItem.textContent = `Expression: ${expression.expression}, ID: ${expression.id}, Status: ${expression.status}, Result: ${expression.result}`;
 
-        // Проверяем статус выражения и присваиваем соответствующий класс CSS
+        // Check the status of the expression and assign the appropriate CSS class
         if (expression.status === 'completed') {
             listItem.classList.add('completed');
         }else{
@@ -76,6 +78,8 @@ function renderExpressions() {
         expressionsList.appendChild(listItem);
     });
 }
+
+// Generate a UUID string for the expression id
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -83,13 +87,28 @@ function generateUUID() {
     });
 }
 
-// Начальная загрузка списка выражений
+// Show an error message to the user with a timeout
+function showErrorMessage(message, additionalText = '') {
+    let errorMessageText = message;
+    if (additionalText) {
+        errorMessageText += `: ${additionalText}`;
+    }
+    errorMessage.textContent = errorMessageText;
+    errorMessage.style.display = 'block';
+
+    // Hide the error message after 5 seconds
+    setTimeout(() => {
+        errorMessage.style.display = 'none';
+        errorMessage.textContent = '';
+    }, 5000);
+}
+// Fetch the list of expressions from the server
 fetchExpressions();
 
-// Запуск периодического обновления списка выражений
-intervalId = setInterval(updateExpressionsList, 5000); // Обновление каждые 5 секунд
+// Start the periodic expression list update
+intervalId = setInterval(updateExpressionsList, 5000); // Update every 5 seconds
 
-// Обработчики событий
+// Event listeners
 submitButton.addEventListener('click', submitExpression);
 
 expressionInput.addEventListener('keydown', event => {
@@ -101,20 +120,3 @@ expressionInput.addEventListener('keydown', event => {
 window.addEventListener('beforeunload', () => {
     clearInterval(intervalId);
 });
-
-
-
-function showErrorMessage(message, additionalText = '') {
-    let errorMessageText = message;
-    if (additionalText) {
-        errorMessageText += `: ${additionalText}`;
-    }
-    errorMessage.textContent = errorMessageText;
-    errorMessage.style.display = 'block';
-
-    // Скрыть сообщение об ошибке через 5 секунд
-    setTimeout(() => {
-        errorMessage.style.display = 'none';
-        errorMessage.textContent = '';
-    }, 5000);
-}

@@ -1,14 +1,14 @@
-# Используем официальный образ Go
+# Alpine Linux with golang 1.22.Alpine is small and fast
 FROM golang:1.22-alpine
 
-# Устанавливаем рабочую директорию
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Копируем все файлы проекта в контейнер
+# Copy go files to the working directory
 COPY . .
 
-# Собираем приложение
+# Build the Go app
 RUN go build -o agent ./cmd/agent/main.go
 
-# Запускаем приложение
+# Start app
 CMD ["./agent"]

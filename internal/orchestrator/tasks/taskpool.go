@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// TaskPool is a struct that represents a task pool in the orchestrator.
 type TaskPool struct {
 	tasks           map[string]*Task
 	taskOwners      map[string]string
@@ -13,6 +14,7 @@ type TaskPool struct {
 	mu              sync.RWMutex
 }
 
+// NewTaskPool creates a new instance of the TaskPool struct.
 func NewTaskPool() *TaskPool {
 	taskPool := &TaskPool{
 		tasks:           make(map[string]*Task),
@@ -25,6 +27,7 @@ func NewTaskPool() *TaskPool {
 	return taskPool
 }
 
+// AddTasks adds a slice of tasks to the task pool.
 func (tp *TaskPool) AddTasks(tasks []Task) {
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
@@ -43,6 +46,7 @@ func (tp *TaskPool) AddTasks(tasks []Task) {
 
 }
 
+// GetTaskToCompute returns the next task to compute in the task pool.
 func (tp *TaskPool) GetTaskToCompute() (Task, error) {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
@@ -58,6 +62,7 @@ func (tp *TaskPool) GetTaskToCompute() (Task, error) {
 	return Task{}, fmt.Errorf("no tasks to compute")
 }
 
+// SetTaskResultAfterCompute sets the result of a task after it has been computed.
 func (tp *TaskPool) SetTaskResultAfterCompute(id string, result float64) error {
 
 	tp.mu.Lock()
@@ -91,6 +96,8 @@ func (tp *TaskPool) SetTaskResultAfterCompute(id string, result float64) error {
 
 	return nil
 }
+
+// DeleteTask deletes a task from the task pool.
 func (tp *TaskPool) DeleteTask(id string) {
 
 	tp.mu.Lock()
@@ -102,6 +109,7 @@ func (tp *TaskPool) DeleteTask(id string) {
 
 }
 
+// DeleteExpression deletes an expression from the task pool.
 func (tp *TaskPool) DeleteExpression(id string) {
 
 	tp.mu.Lock()
@@ -111,6 +119,7 @@ func (tp *TaskPool) DeleteExpression(id string) {
 
 }
 
+// IsLastTask returns true if the task is the last task in the expression.
 func (tp *TaskPool) IsLastTask(id string) (bool, error) {
 
 	tp.mu.RLock()

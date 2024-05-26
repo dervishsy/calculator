@@ -1,16 +1,16 @@
-# Переменные
+# Variables
 BINARY_NAME=calculator
 ORCHESTRATOR_BINARY=./$(BINARY_NAME)-orchestrator.exe
 AGENT_BINARY=./$(BINARY_NAME)-agent.exe
 
-# Команды
+# Commands
 all: clean build
 
-# Очистка
+#  Remove all binaries
 clean:
 	rm -f $(ORCHESTRATOR_BINARY) $(AGENT_BINARY)
 
-# Сборка
+# Build all binaries
 build: build-o build-a
 
 build-o:
@@ -19,19 +19,19 @@ build-o:
 build-a:
 	go build -o $(AGENT_BINARY) ./cmd/agent/main.go
 
-# Запуск
+# Run
 run-o:
 	./$(ORCHESTRATOR_BINARY)
 
 run-a:
 	./$(AGENT_BINARY)
 
-# Запуск с перезагрузкой после изменения исходников (требуется https://github.com/cosmtrek/air)
+# Run reloaded after source change (requires https://github.com/cosmtrek/air)
 air-o:
-	air -c "./.air/air-o.toml" 
+	air -c "./.air/air-o.toml"
 
 air-a:
-	air -c "./.air/air-a.toml" 
+	air -c "./.air/air-a.toml"
 
 # Docker
 docker-build:
@@ -45,7 +45,7 @@ docker-run:
 docker-compose:
 	docker-compose up
 
-# Тесты
+# Tests
 test:
 	curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"id":"100" ,"expression": "2 + 2 * 2"}'
 	curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"id":"101" ,"expression": "2 * 2 * 2"}'
@@ -53,17 +53,17 @@ test:
 	curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"id":"103" ,"expression": "2 - 2 * 2"}'
 	curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"id":"104" ,"expression": "2 * 2 + 2"}'
 
-# Покрытие кода тестами 
+# Test coverage
 cover:
 	go test -v -coverpkg=./... -coverprofile=./.tmp/.cover.out  ./...
 	go tool cover -html=./tmp/.cover.out
 
-# Покрытие кода тестами в виде svg файла (требуется https://github.com/nikolaydubina/go-cover-treemap)
+# Test coverage as SVG (requires https://github.com/nikolaydubina/go-cover-treemap)
 cover-svg:
 	go test -coverprofile ./.tmp/.cover.out ./...
 	go-cover-treemap -coverprofile ./.tmp/.cover.out > ./.tmp/.out.svg
 
-# Помощь
+# Help
 help:
 	@echo "Available commands:"
 	@echo "  make all             Build all binaries"

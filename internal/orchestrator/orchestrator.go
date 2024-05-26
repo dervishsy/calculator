@@ -9,11 +9,13 @@ import (
 	"net/http"
 )
 
+// Orchestrator represents the orchestrator.
 type Orchestrator struct {
 	cfg *configs.Config
 	log logger.Logger
 }
 
+// NewOrchestrator creates a new instance of the Orchestrator.
 func NewOrchestrator(cfg *configs.Config, log logger.Logger) (*Orchestrator, error) {
 
 	return &Orchestrator{
@@ -22,7 +24,7 @@ func NewOrchestrator(cfg *configs.Config, log logger.Logger) (*Orchestrator, err
 	}, nil
 }
 
-// func (o *Orchestrator) Router() *http.ServeMux {
+// Router returns the router for the orchestrator.
 func (o *Orchestrator) Router() http.Handler {
 	mux := http.NewServeMux()
 	storage := storage.NewStorage()

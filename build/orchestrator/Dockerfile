@@ -1,17 +1,17 @@
-# Используем официальный образ Go
+# Alpine Linux with golang 1.22.Alpine is small and fast
 FROM golang:1.22-alpine
 
-# Устанавливаем рабочую директорию
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Копируем все файлы проекта в контейнер
+# Copy go files to the working directory
 COPY . .
 
-# Собираем приложение
+# Build the Go app
 RUN go build -o orchestrator ./cmd/orchestrator/main.go
 
-# Открываем порт для оркестратора
+# Expose port 8080 to the outside world
 EXPOSE 8080
 
-# Запускаем приложение
+# Start app
 CMD ["./orchestrator"]

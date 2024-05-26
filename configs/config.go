@@ -11,6 +11,7 @@ type Server struct {
 	Port int `yaml:"port"`
 }
 
+// Config represents the configuration for the calculator server.
 type Config struct {
 	Server               Server `yaml:"server"`
 	OrchestratorURL      string `yaml:"orchestratorURL"`
@@ -48,6 +49,7 @@ func LoadConfig(path string) (*Config, error) {
 	return config, nil
 }
 
+// ConfigFromEnvironment loads the configuration from environment variables.
 func ConfigFromEnvironment(cfg *Config) {
 
 	cfg.TimeAdditionMS = getEnvAsInt("TIME_ADDITION_MS", cfg.TimeAdditionMS)
@@ -59,6 +61,7 @@ func ConfigFromEnvironment(cfg *Config) {
 	cfg.Server.Port = getEnvAsInt("SERVER_PORT", cfg.Server.Port)
 }
 
+// ConfigFromData loads the configuration from a YAML byte array.
 func ConfigFromData(data []byte) (*Config, error) {
 	cfg := &Config{}
 	err := yaml.Unmarshal(data, &cfg)

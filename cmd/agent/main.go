@@ -11,26 +11,26 @@ import (
 )
 
 func main() {
-	// Инициализация логгера
+	// Logger initialization
 	log, err := logger.NewLogger("agent")
 	if err != nil {
 		log.Fatalf("Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Загрузка конфигурации
+	// Configuration loading
 	cfg, err := configs.LoadConfig("configs/agent.yml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Создание агента
+	// Agent initialization
 	agent, err := agent.NewAgent(cfg, log)
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
 	}
 
-	// Запуск агента
+	// Start agent
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -38,7 +38,7 @@ func main() {
 
 	log.Infof("Server adress must be: %s", cfg.OrchestratorURL)
 
-	// Обработка сигналов для корректного завершения
+	// Graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan

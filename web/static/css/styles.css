@@ -66,5 +66,5 @@ body {
     padding: 10px;
     margin-top: 10px;
     border-radius: 4px;
-    display: none; /* Изначально сообщение скрыто */
+    display: none; /* Hide the error message initially */
 }

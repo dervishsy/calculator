@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// New generates a version 4 UUID string.
 func New() string {
 	uuid := make([]byte, 16)
 	_, err := rand.Read(uuid)

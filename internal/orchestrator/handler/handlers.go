@@ -157,6 +157,8 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+// HandleStartPage handles the request to get the start page.
 func (h *Handler) HandleStartPage(w http.ResponseWriter, r *http.Request) {
 	templates := template.Must(template.ParseFiles(
 		//filepath.Join("web/templates", "base.html"),

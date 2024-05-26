@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// LoggingMiddleware logs all incoming HTTP requests.
 func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -18,6 +19,7 @@ func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// PanicRecoveryMiddleware recovers from panics in handlers.
 func (h *Handler) PanicRecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {

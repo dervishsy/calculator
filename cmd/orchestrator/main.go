@@ -10,26 +10,26 @@ import (
 )
 
 func main() {
-	// Инициализация логгера
+	// Logger initialization
 	log, err := logger.NewLogger("orchestrator")
 	if err != nil {
 		fmt.Printf("Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Загрузка конфигурации
+	// Configuration loading
 	cfg, err := configs.LoadConfig("configs/orchestrator.yml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Создание оркестратора
+	// Orchestrator initialization
 	orchestrator, err := orchestrator.NewOrchestrator(cfg, log)
 	if err != nil {
 		log.Fatalf("Failed to create orchestrator: %v", err)
 	}
 
-	// Запуск HTTP-сервера
+	// Start HTTP server
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	log.Infof("Starting server on %s", addr)
 	err = http.ListenAndServe(addr, orchestrator.Router())

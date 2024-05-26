@@ -5,12 +5,10 @@ import (
 	"log/slog"
 )
 
-// Logger is a wrapper around the zap logger.
 type Logger struct {
 	*slog.Logger
 }
 
-// NewLogger creates a new instance of the Logger.
 func NewLogger(service string) (Logger, error) {
 	logger := slog.Default()
 	return Logger{logger}, nil

@@ -5,6 +5,15 @@ import (
 	"calculator/pkg/uuid"
 )
 
+// TreeToTasks converts a binary tree representation of an arithmetic expression
+// into a list of tasks.
+//
+// Parameters:
+// - root: The root node of the binary tree representing the arithmetic expression.
+// - ExprID: The ID of the expression.
+//
+// Returns:
+// - []Task: The list of tasks representing the arithmetic expression.
 func TreeToTasks(root *parser.Node, ExprID string) []Task {
 	if root == nil {
 		return []Task{}

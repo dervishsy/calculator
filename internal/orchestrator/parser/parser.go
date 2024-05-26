@@ -6,13 +6,13 @@ import (
 	"strconv"
 )
 
-// Token представляет токен в выражении
+// Tocken is representing token in expression
 type Token struct {
 	Type  TokenType
 	Value string
 }
 
-// TokenType представляет тип токена
+// TokenType is type of token
 type TokenType int
 
 const (
@@ -26,7 +26,7 @@ const (
 	Empty
 )
 
-// Node представляет узел в дереве выражения
+// Node represents node in binary tree
 type Node struct {
 	Token  Token
 	Left   *Node
@@ -35,6 +35,7 @@ type Node struct {
 	Parsed bool
 }
 
+// Parse parses expression and returns root node of expression tree
 func Parse(expr string) (*Node, error) {
 	tokens, err := tokenize(expr)
 	if err != nil {
@@ -52,6 +53,7 @@ func Parse(expr string) (*Node, error) {
 	return root, nil
 }
 
+// Evaluate evaluates expression and returns result
 func (n *Node) Evaluate() (float64, error) {
 	if n.Parsed {
 		return n.Value, nil

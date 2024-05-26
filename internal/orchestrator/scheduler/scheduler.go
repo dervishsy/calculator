@@ -62,34 +62,8 @@ func (s *Scheduler) GetTask() (*shared.Task, error) {
 	return &agentTask, nil
 }
 
-func (s *Scheduler) taskToAgentTask(task tasks.Task) shared.Task {
-
-	return shared.Task{
-		ExprID:        task.ExprID,
-		ID:            task.ID,
-		Arg1:          task.ArgLeft.ArgFloat,
-		Arg2:          task.ArgRight.ArgFloat,
-		Operation:     task.Operation,
-		OperationTime: s.getOperationTime(task.Operation),
-	}
-}
-func (s *Scheduler) getOperationTime(operation string) time.Duration {
-	opTime := 0
-	switch operation {
-	case "+":
-		opTime = s.cfg.TimeAdditionMS
-	case "-":
-		opTime = s.cfg.TimeSubtractionMS
-	case "*":
-		opTime = s.cfg.TimeMultiplicationMS
-	case "/":
-		opTime = s.cfg.TimeDivisionMS
-	}
-
-	return time.Duration(opTime) * time.Millisecond
-}
-
 // ProcessResult processes the result of a task computation.
+// Deletes the task from the queue after processing.
 func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 
 	expr, err := s.storage.GetExpressionByTaskID(taskID)
@@ -124,4 +98,31 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 	}
 
 	return nil
+}
+
+func (s *Scheduler) taskToAgentTask(task tasks.Task) shared.Task {
+
+	return shared.Task{
+		ExprID:        task.ExprID,
+		ID:            task.ID,
+		Arg1:          task.ArgLeft.ArgFloat,
+		Arg2:          task.ArgRight.ArgFloat,
+		Operation:     task.Operation,
+		OperationTime: s.getOperationTime(task.Operation),
+	}
+}
+func (s *Scheduler) getOperationTime(operation string) time.Duration {
+	opTime := 0
+	switch operation {
+	case "+":
+		opTime = s.cfg.TimeAdditionMS
+	case "-":
+		opTime = s.cfg.TimeSubtractionMS
+	case "*":
+		opTime = s.cfg.TimeMultiplicationMS
+	case "/":
+		opTime = s.cfg.TimeDivisionMS
+	}
+
+	return time.Duration(opTime) * time.Millisecond
 }
