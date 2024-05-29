@@ -13,8 +13,4 @@ func (h *Handler) RegisterRoutes(r *http.ServeMux) {
 	// agent
 	r.HandleFunc("GET /internal/task", h.HandleGetTask)
 	r.HandleFunc("POST /internal/task", h.HandlePostTask)
-	// web
-	r.HandleFunc("GET /{$}", h.HandleStartPage)
-	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
-
 }

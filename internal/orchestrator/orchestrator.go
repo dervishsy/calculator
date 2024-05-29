@@ -5,6 +5,7 @@ import (
 	"calculator/internal/orchestrator/handler"
 	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/orchestrator/storage"
+	"calculator/internal/orchestrator/web"
 	"net/http"
 
 	"calculator/pkg/middlewares"
@@ -31,6 +32,8 @@ func (o *Orchestrator) Router() http.Handler {
 
 	handler := handler.NewHandler(sheduler, storage)
 	handler.RegisterRoutes(mux)
+
+	web.RegisterRoutes(mux)
 
 	result := middlewares.MakeLoggingMiddleware(mux)
 	result = middlewares.PanicRecoveryMiddleware(result)

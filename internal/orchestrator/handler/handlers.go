@@ -7,9 +7,7 @@ import (
 	"calculator/pkg/logger"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
-	"path/filepath"
 )
 
 // Handler represents the HTTP handler for the orchestrator.
@@ -154,19 +152,4 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 	logger.Infof("Request to post a result of a task computation: %v", result)
 
 	w.WriteHeader(http.StatusOK)
-}
-
-// HandleStartPage handles the request to get the start page.
-func (h *Handler) HandleStartPage(w http.ResponseWriter, r *http.Request) {
-	templates := template.Must(template.ParseFiles(
-		//filepath.Join("web/templates", "base.html"),
-		filepath.Join("web/templates", "index.html"),
-	))
-	//	tmpl := "base.html"
-	tmpl := "index.html"
-	err := templates.ExecuteTemplate(w, tmpl, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
 }
