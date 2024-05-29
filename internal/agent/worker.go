@@ -2,7 +2,7 @@ package agent
 
 import (
 	"bytes"
-	shared "calculator/internal/shared/entity"
+	"calculator/internal/shared/entity"
 	"calculator/pkg/logger"
 	"context"
 	"encoding/json"
@@ -64,7 +64,7 @@ func (w *Worker) doWork() {
 	}
 }
 
-func (w *Worker) getTask() (*shared.Task, error) {
+func (w *Worker) getTask() (*entity.Task, error) {
 	url := fmt.Sprintf("%s/internal/task", w.orchestratorURL)
 	resp, err := w.client.Get(url)
 	if err != nil {
@@ -81,7 +81,7 @@ func (w *Worker) getTask() (*shared.Task, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var task shared.Task
+	var task entity.Task
 	err = json.NewDecoder(resp.Body).Decode(&task)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (w *Worker) getTask() (*shared.Task, error) {
 	return &task, nil
 }
 
-func (w *Worker) performOperation(task *shared.Task) (float64, error) {
+func (w *Worker) performOperation(task *entity.Task) (float64, error) {
 	var result float64
 
 	switch task.Operation {
@@ -116,7 +116,7 @@ func (w *Worker) performOperation(task *shared.Task) (float64, error) {
 
 func (w *Worker) sendResult(taskID string, result float64) error {
 	url := fmt.Sprintf("%s/internal/task", w.orchestratorURL)
-	payload := shared.TaskResult{
+	payload := entity.TaskResult{
 		ID:     taskID,
 		Result: result,
 	}
