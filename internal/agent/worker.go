@@ -14,15 +14,13 @@ import (
 
 // Worker represents a computational worker that can perform arithmetic operations.
 type Worker struct {
-	log             logger.Logger
 	orchestratorURL string
 	client          *http.Client
 }
 
 // NewWorker creates a new instance of the Worker.
-func NewWorker(log logger.Logger, orchestratorURL string, client *http.Client) *Worker {
+func NewWorker(orchestratorURL string, client *http.Client) *Worker {
 	return &Worker{
-		log:             log,
 		orchestratorURL: orchestratorURL,
 		client:          client,
 	}
@@ -45,7 +43,7 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) {
 func (w *Worker) doWork() {
 	task, err := w.getTask()
 	if err != nil {
-		w.log.Errorf("Failed to get task: %v", err)
+		logger.Errorf("Failed to get task: %v", err)
 		return
 	}
 
@@ -56,13 +54,13 @@ func (w *Worker) doWork() {
 
 	result, err := w.performOperation(task)
 	if err != nil {
-		w.log.Errorf("Failed to perform operation: %v", err)
+		logger.Errorf("Failed to perform operation: %v", err)
 		return
 	}
 
 	err = w.sendResult(task.ID, result)
 	if err != nil {
-		w.log.Errorf("Failed to send result: %v", err)
+		logger.Errorf("Failed to send result: %v", err)
 	}
 }
 
@@ -75,7 +73,7 @@ func (w *Worker) getTask() (*shared.Task, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		w.log.Infof("No tasks available")
+		logger.Infof("No tasks available")
 		return nil, nil
 	}
 
@@ -88,7 +86,7 @@ func (w *Worker) getTask() (*shared.Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.log.Infof("Get task: %v", task)
+	logger.Infof("Get task: %v", task)
 
 	return &task, nil
 }
@@ -123,7 +121,7 @@ func (w *Worker) sendResult(taskID string, result float64) error {
 		Result: result,
 	}
 
-	w.log.Infof("Send result for task %s: %f", taskID, result)
+	logger.Infof("Send result for task %s: %f", taskID, result)
 
 	body, err := json.Marshal(payload)
 	if err != nil {

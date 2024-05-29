@@ -4,7 +4,6 @@ import (
 	"calculator/configs"
 	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/orchestrator/storage"
-	"calculator/pkg/logger"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -31,18 +30,14 @@ func TestHandleCalculate_Success(t *testing.T) {
 		TimeDivisionMS:       400,
 	}
 
-	// Create a mock logger
-	mockLogger, _ := logger.NewLogger("test")
-
 	// Create a mock storage
 	mockStorage := storage.NewStorage()
 
 	// Create a mock scheduler
-	mockScheduler := scheduler.NewScheduler(mockLogger, mockStorage, cfg)
+	mockScheduler := scheduler.NewScheduler(mockStorage, cfg)
 
 	// Create a new handler
 	handler := &Handler{
-		log:       mockLogger,
 		scheduler: mockScheduler,
 		storage:   mockStorage,
 	}
@@ -78,17 +73,14 @@ func TestHandleCalculate_DecodeError(t *testing.T) {
 	}
 
 	// Create a mock logger
-	mockLogger, _ := logger.NewLogger("test")
-
 	// Create a mock storage
 	mockStorage := storage.NewStorage()
 
 	// Create a mock scheduler
-	mockScheduler := scheduler.NewScheduler(mockLogger, mockStorage, cfg)
+	mockScheduler := scheduler.NewScheduler(mockStorage, cfg)
 
 	// Create a new handler
 	handler := &Handler{
-		log:       mockLogger,
 		scheduler: mockScheduler,
 		storage:   mockStorage,
 	}

@@ -1,31 +1,49 @@
 package logger
 
 import (
-	"fmt"
-	"log/slog"
+	"log"
+	"os"
 )
 
-type Logger struct {
-	*slog.Logger
+var (
+	infoLog  *log.Logger
+	errorLog *log.Logger
+)
+
+func init() { //nolint:gochecknoinits
+	infoLog = log.New(os.Stdout,
+		"INFO: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	errorLog = log.New(os.Stderr,
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-func NewLogger(service string) (Logger, error) {
-	logger := slog.Default()
-	return Logger{logger}, nil
+func Info(v ...any) {
+	infoLog.Println(v...)
 }
 
-func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.Error(fmt.Sprintf(format, args...))
+func Error(v ...any) {
+	errorLog.Println(v...)
 }
 
-func (l *Logger) Infof(format string, args ...interface{}) {
-	l.Info(fmt.Sprintf(format, args...))
+func Fatal(v ...any) {
+	errorLog.Fatal(v...)
 }
 
-func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.Error(fmt.Sprintf(format, args...))
+func Infof(format string, args ...any) {
+	infoLog.Printf(format, args...)
 }
 
-func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.Debug(fmt.Sprintf(format, args...))
+func Debugf(format string, args ...any) {
+	infoLog.Printf(format, args...)
+}
+
+func Errorf(format string, args ...any) {
+	errorLog.Printf(format, args...)
+}
+
+func Fatalf(format string, args ...any) {
+	errorLog.Printf(format, args...)
 }

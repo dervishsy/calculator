@@ -5,22 +5,21 @@ import (
 	"calculator/internal/orchestrator/handler"
 	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/orchestrator/storage"
-	"calculator/pkg/logger"
 	"net/http"
+
+	"calculator/pkg/middlewares"
 )
 
 // Orchestrator represents the orchestrator.
 type Orchestrator struct {
 	cfg *configs.Config
-	log logger.Logger
 }
 
 // NewOrchestrator creates a new instance of the Orchestrator.
-func NewOrchestrator(cfg *configs.Config, log logger.Logger) (*Orchestrator, error) {
+func NewOrchestrator(cfg *configs.Config) (*Orchestrator, error) {
 
 	return &Orchestrator{
 		cfg: cfg,
-		log: log,
 	}, nil
 }
 
@@ -28,13 +27,13 @@ func NewOrchestrator(cfg *configs.Config, log logger.Logger) (*Orchestrator, err
 func (o *Orchestrator) Router() http.Handler {
 	mux := http.NewServeMux()
 	storage := storage.NewStorage()
-	sheduler := scheduler.NewScheduler(o.log, storage, o.cfg)
+	sheduler := scheduler.NewScheduler(storage, o.cfg)
 
-	handler := handler.NewHandler(o.log, sheduler, storage)
+	handler := handler.NewHandler(sheduler, storage)
 	handler.RegisterRoutes(mux)
 
-	result := handler.LoggingMiddleware(mux)
-	result = handler.PanicRecoveryMiddleware(result)
+	result := middlewares.MakeLoggingMiddleware(mux)
+	result = middlewares.PanicRecoveryMiddleware(result)
 
 	return result
 }

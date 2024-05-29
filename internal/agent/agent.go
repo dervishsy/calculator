@@ -11,7 +11,6 @@ import (
 // Agent represents a computational agent that can perform arithmetic operations.
 type Agent struct {
 	cfg             *configs.Config
-	log             logger.Logger
 	orchestratorURL string
 	computingPower  int
 	client          *http.Client
@@ -20,11 +19,10 @@ type Agent struct {
 }
 
 // NewAgent creates a new instance of the Agent.
-func NewAgent(cfg *configs.Config, log logger.Logger) (*Agent, error) {
+func NewAgent(cfg *configs.Config) (*Agent, error) {
 
 	agent := &Agent{
 		cfg:             cfg,
-		log:             log,
 		orchestratorURL: cfg.OrchestratorURL,
 		computingPower:  cfg.ComputingPower,
 		client:          &http.Client{},
@@ -36,15 +34,15 @@ func NewAgent(cfg *configs.Config, log logger.Logger) (*Agent, error) {
 
 // Run starts the agent and its workers.
 func (a *Agent) Run(ctx context.Context) {
-	a.log.Info("Starting agent")
+	logger.Info("Starting agent")
 
 	for i := 0; i < a.computingPower; i++ {
-		worker := NewWorker(a.log, a.orchestratorURL, a.client)
+		worker := NewWorker(a.orchestratorURL, a.client)
 		a.workers[i] = worker
 		a.wg.Add(1)
 		go worker.Run(ctx, &a.wg)
 	}
 
 	a.wg.Wait()
-	a.log.Info("Agent stopped")
+	logger.Info("Agent stopped")
 }

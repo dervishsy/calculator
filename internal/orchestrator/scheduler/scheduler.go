@@ -19,16 +19,14 @@ var (
 // Scheduler is responsible for managing the execution of arithmetic expressions.
 type Scheduler struct {
 	cfg      *configs.Config
-	log      logger.Logger
 	storage  *storage.Storage
 	taskPoll *tasks.TaskPool
 }
 
 // NewScheduler creates a new instance of the Scheduler.
-func NewScheduler(log logger.Logger, storage *storage.Storage, cfg *configs.Config) *Scheduler {
+func NewScheduler(storage *storage.Storage, cfg *configs.Config) *Scheduler {
 	return &Scheduler{
 		cfg:      cfg,
-		log:      log,
 		storage:  storage,
 		taskPoll: tasks.NewTaskPool(),
 	}
@@ -94,7 +92,7 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 	}
 
 	if expr.Status == shared.ExpressionStatusCompleted {
-		s.log.Infof("Expression %s completed with result %f", expr.ID, result)
+		logger.Infof("Expression %s completed with result %f", expr.ID, result)
 	}
 
 	return nil

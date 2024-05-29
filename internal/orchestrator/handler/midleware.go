@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"calculator/pkg/logger"
 	"io"
 	"net/http"
 )
@@ -14,7 +15,7 @@ func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
 		r.Body.Close() //  must close
 		r.Body = io.NopCloser(bytes.NewBuffer(b))
 
-		h.log.Infof("%s %s - %s", r.Method, r.URL.Path, b)
+		logger.Infof("%s %s - %s", r.Method, r.URL.Path, b)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -25,7 +26,7 @@ func (h *Handler) PanicRecoveryMiddleware(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				h.log.Errorf("%v", err)
+				logger.Errorf("%v", err)
 			}
 		}()
 
