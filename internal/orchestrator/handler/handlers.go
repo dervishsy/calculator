@@ -155,7 +155,6 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Infof("Request to post a result of a task computation: %v", result)
 
-	// w.WriteHeader(http.StatusOK)
 	if err = utils.SuccessRespondWith200(w, struct{}{}); err != nil {
 		logger.Error(err)
 	}
