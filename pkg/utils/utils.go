@@ -48,6 +48,12 @@ func RespondWith404(w http.ResponseWriter) error {
 		http.StatusText(http.StatusNotFound))
 }
 
+func RespondWith422(w http.ResponseWriter) error {
+	return RespondWithError(w,
+		http.StatusUnprocessableEntity,
+		http.StatusText(http.StatusUnprocessableEntity))
+}
+
 func RespondWith500(w http.ResponseWriter) error {
 	return RespondWithError(w,
 		http.StatusInternalServerError,

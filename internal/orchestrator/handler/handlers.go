@@ -5,8 +5,8 @@ import (
 	"calculator/internal/orchestrator/storage"
 	"calculator/internal/shared"
 	"calculator/pkg/logger"
+	"calculator/pkg/utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -30,7 +30,9 @@ func (h *Handler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&expr)
 	if err != nil {
 		logger.Errorf("Failed to decode request body: %v", err)
-		http.Error(w, "Invalid request body", http.StatusUnprocessableEntity)
+		if err = utils.RespondWith422(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 	defer r.Body.Close()
@@ -38,12 +40,17 @@ func (h *Handler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	err = h.scheduler.ScheduleExpression(expr.ID, expr.Expression)
 	if err != nil {
 		logger.Errorf("Failed to schedule expression: %v", err)
-		http.Error(w, fmt.Sprintf("Failed to schedule expression: %v", err), http.StatusInternalServerError)
+		if err = utils.RespondWith500(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 	logger.Infof("Schedule expression: %v", expr)
 
-	w.WriteHeader(http.StatusCreated)
+	if err = utils.SuccessRepondWith201(w, struct{}{}); err != nil {
+		logger.Error(err)
+	}
+
 }
 
 // HandleGetExpressions handles the request to get a list of expressions.
@@ -51,23 +58,19 @@ func (h *Handler) HandleGetExpressions(w http.ResponseWriter, r *http.Request) {
 	expressions, err := h.storage.GetExpressions()
 	if err != nil {
 		logger.Errorf("Failed to get expressions: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	respBody, err := json.Marshal(map[string][]shared.Expression{
-		"expressions": expressions,
-	})
-	if err != nil {
-		logger.Errorf("Failed to marshal response: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if err = utils.RespondWith500(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 
 	logger.Infof("Get a list of expressions: %v", expressions)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(respBody)
+
+	ex := map[string][]shared.Expression{"expressions": expressions}
+	if err = utils.SuccessRespondWith200(w, ex); err != nil {
+		logger.Error(err)
+	}
+
 }
 
 // HandleGetExpression handles the request to get a specific expression.
@@ -77,28 +80,25 @@ func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 	expr, err := h.storage.GetExpression(id)
 	if err != nil {
 		if err == storage.ErrExpressionNotFound {
-			http.Error(w, "Expression not found", http.StatusNotFound)
+			if err = utils.RespondWith404(w); err != nil {
+				logger.Error(err)
+			}
 			return
 		}
 		logger.Errorf("Failed to get expression: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	respBody, err := json.Marshal(map[string]shared.Expression{
-		"expression": *expr,
-	})
-	if err != nil {
-		logger.Errorf("Failed to marshal response: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if err = utils.RespondWith500(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 
 	logger.Infof("Request to get a specific expression: %v", expr)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(respBody)
+	ex := map[string]shared.Expression{"expression": *expr}
+	if err = utils.SuccessRespondWith200(w, ex); err != nil {
+		logger.Error(err)
+	}
+
 }
 
 // HandleGetTask handles the request to get a task for computation.
@@ -106,26 +106,24 @@ func (h *Handler) HandleGetTask(w http.ResponseWriter, r *http.Request) {
 	task, err := h.scheduler.GetTask()
 	if err != nil {
 		if err == scheduler.ErrNoTasksAvailable {
-			http.Error(w, "No tasks available", http.StatusNotFound)
+			if err = utils.RespondWith404(w); err != nil {
+				logger.Error(err)
+			}
 			return
 		}
 		logger.Errorf("Failed to get task: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	respBody, err := json.Marshal(task)
-	if err != nil {
-		logger.Errorf("Failed to marshal response: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if err = utils.RespondWith500(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 
 	logger.Infof("Request to get a task for computation: %v", task)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(respBody)
+	if err = utils.SuccessRespondWith200(w, task); err != nil {
+		logger.Error(err)
+	}
+
 }
 
 // HandlePostTask handles the request to post a result of a task computation.
@@ -134,7 +132,9 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&result)
 	if err != nil {
 		logger.Errorf("Failed to decode request body: %v", err)
-		http.Error(w, "Invalid request body", http.StatusUnprocessableEntity)
+		if err = utils.RespondWith422(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 	defer r.Body.Close()
@@ -143,13 +143,21 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Errorf("Failed to process result: %v", err)
 		if err == scheduler.ErrTaskNotFound {
-			http.Error(w, "Task not found", http.StatusNotFound)
+			if err = utils.RespondWith404(w); err != nil {
+				logger.Error(err)
+			}
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if err = utils.RespondWith500(w); err != nil {
+			logger.Error(err)
+		}
 		return
 	}
 	logger.Infof("Request to post a result of a task computation: %v", result)
 
-	w.WriteHeader(http.StatusOK)
+	// w.WriteHeader(http.StatusOK)
+	if err = utils.SuccessRespondWith200(w, struct{}{}); err != nil {
+		logger.Error(err)
+	}
+
 }
