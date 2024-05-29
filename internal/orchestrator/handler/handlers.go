@@ -3,7 +3,7 @@ package handler
 import (
 	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/orchestrator/storage"
-	"calculator/internal/shared"
+	"calculator/internal/shared/entity"
 	"calculator/pkg/logger"
 	"calculator/pkg/utils"
 	"encoding/json"
@@ -26,7 +26,7 @@ func NewHandler(scheduler *scheduler.Scheduler, storage *storage.Storage) *Handl
 
 // HandleCalculate handles the request to calculate an arithmetic expression.
 func (h *Handler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
-	var expr shared.Expression
+	var expr entity.Expression
 	err := json.NewDecoder(r.Body).Decode(&expr)
 	if err != nil {
 		logger.Errorf("Failed to decode request body: %v", err)
@@ -66,7 +66,7 @@ func (h *Handler) HandleGetExpressions(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infof("Get a list of expressions: %v", expressions)
 
-	ex := map[string][]shared.Expression{"expressions": expressions}
+	ex := map[string][]entity.Expression{"expressions": expressions}
 	if err = utils.SuccessRespondWith200(w, ex); err != nil {
 		logger.Error(err)
 	}
@@ -94,7 +94,7 @@ func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infof("Request to get a specific expression: %v", expr)
 
-	ex := map[string]shared.Expression{"expression": *expr}
+	ex := map[string]entity.Expression{"expression": *expr}
 	if err = utils.SuccessRespondWith200(w, ex); err != nil {
 		logger.Error(err)
 	}
@@ -128,7 +128,7 @@ func (h *Handler) HandleGetTask(w http.ResponseWriter, r *http.Request) {
 
 // HandlePostTask handles the request to post a result of a task computation.
 func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
-	var result shared.TaskResult
+	var result entity.TaskResult
 	err := json.NewDecoder(r.Body).Decode(&result)
 	if err != nil {
 		logger.Errorf("Failed to decode request body: %v", err)

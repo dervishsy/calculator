@@ -2,7 +2,7 @@ package storage
 
 import (
 	"calculator/internal/orchestrator/tasks"
-	"calculator/internal/shared"
+	"calculator/internal/shared/entity"
 	"errors"
 	"slices"
 	"sync"
@@ -14,7 +14,7 @@ var (
 
 // Storage represents a simple in-memory storage for arithmetic expressions.
 type Storage struct {
-	expressions map[string]*shared.Expression
+	expressions map[string]*entity.Expression
 	taskIDs     map[string]string
 	mu          sync.RWMutex
 }
@@ -22,7 +22,7 @@ type Storage struct {
 // NewStorage creates a new instance of the Storage.
 func NewStorage() *Storage {
 	return &Storage{
-		expressions: make(map[string]*shared.Expression),
+		expressions: make(map[string]*entity.Expression),
 		taskIDs:     make(map[string]string),
 	}
 }
@@ -36,10 +36,10 @@ func (s *Storage) CreateExpression(id string, expr string, tasksList []tasks.Tas
 		return errors.New("expression already exists")
 	}
 
-	s.expressions[id] = &shared.Expression{
+	s.expressions[id] = &entity.Expression{
 		ID:         id,
 		Expression: expr,
-		Status:     shared.ExpressionStatusPending,
+		Status:     entity.ExpressionStatusPending,
 	}
 	for _, task := range tasksList {
 		s.taskIDs[task.ID] = id
@@ -48,7 +48,7 @@ func (s *Storage) CreateExpression(id string, expr string, tasksList []tasks.Tas
 }
 
 // GetExpression retrieves an arithmetic expression by its ID.
-func (s *Storage) GetExpression(id string) (*shared.Expression, error) {
+func (s *Storage) GetExpression(id string) (*entity.Expression, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -61,16 +61,16 @@ func (s *Storage) GetExpression(id string) (*shared.Expression, error) {
 }
 
 // GetExpressions retrieves all arithmetic expressions.
-func (s *Storage) GetExpressions() ([]shared.Expression, error) {
+func (s *Storage) GetExpressions() ([]entity.Expression, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	expressions := make([]shared.Expression, 0, len(s.expressions))
+	expressions := make([]entity.Expression, 0, len(s.expressions))
 	for _, expr := range s.expressions {
 		expressions = append(expressions, *expr)
 	}
 
-	slices.SortFunc(expressions, func(a, b shared.Expression) int {
+	slices.SortFunc(expressions, func(a, b entity.Expression) int {
 		if a.ID == b.ID {
 			return 0
 		} else if a.ID > b.ID {
@@ -83,7 +83,7 @@ func (s *Storage) GetExpressions() ([]shared.Expression, error) {
 }
 
 // UpdateExpression updates the status and result of an arithmetic expression.
-func (s *Storage) UpdateExpression(id string, status shared.ExpressionStatus, result float64) error {
+func (s *Storage) UpdateExpression(id string, status entity.ExpressionStatus, result float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -99,7 +99,7 @@ func (s *Storage) UpdateExpression(id string, status shared.ExpressionStatus, re
 }
 
 // GetExpressionByTaskID retrieves the arithmetic expression associated with a task ID.
-func (s *Storage) GetExpressionByTaskID(taskID string) (*shared.Expression, error) {
+func (s *Storage) GetExpressionByTaskID(taskID string) (*entity.Expression, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

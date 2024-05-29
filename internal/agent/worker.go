@@ -2,7 +2,7 @@ package agent
 
 import (
 	"bytes"
-	"calculator/internal/shared"
+	shared "calculator/internal/shared/entity"
 	"calculator/pkg/logger"
 	"context"
 	"encoding/json"

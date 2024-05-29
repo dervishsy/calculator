@@ -5,7 +5,7 @@ import (
 	"calculator/internal/orchestrator/parser"
 	"calculator/internal/orchestrator/storage"
 	"calculator/internal/orchestrator/tasks"
-	"calculator/internal/shared"
+	"calculator/internal/shared/entity"
 	"calculator/pkg/logger"
 	"errors"
 	"time"
@@ -50,7 +50,7 @@ func (s *Scheduler) ScheduleExpression(id, expr string) error {
 }
 
 // GetTask retrieves the next task from the queue.
-func (s *Scheduler) GetTask() (*shared.Task, error) {
+func (s *Scheduler) GetTask() (*entity.Task, error) {
 	task, err := s.taskPoll.GetTaskToCompute()
 
 	if err != nil {
@@ -87,20 +87,20 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 		return nil
 	}
 	s.taskPoll.DeleteExpression(expr.ID)
-	if err = s.storage.UpdateExpression(expr.ID, shared.ExpressionStatusCompleted, result); err != nil {
+	if err = s.storage.UpdateExpression(expr.ID, entity.ExpressionStatusCompleted, result); err != nil {
 		return err
 	}
 
-	if expr.Status == shared.ExpressionStatusCompleted {
+	if expr.Status == entity.ExpressionStatusCompleted {
 		logger.Infof("Expression %s completed with result %f", expr.ID, result)
 	}
 
 	return nil
 }
 
-func (s *Scheduler) taskToAgentTask(task tasks.Task) shared.Task {
+func (s *Scheduler) taskToAgentTask(task tasks.Task) entity.Task {
 
-	return shared.Task{
+	return entity.Task{
 		ExprID:        task.ExprID,
 		ID:            task.ID,
 		Arg1:          task.ArgLeft.ArgFloat,
