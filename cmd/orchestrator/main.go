@@ -4,29 +4,39 @@ import (
 	"calculator/configs"
 	"calculator/internal/orchestrator"
 	"calculator/pkg/logger"
-	"fmt"
-	"net/http"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
 
 	// Configuration loading
-	cfg, err := configs.LoadConfig("configs/orchestrator.yml")
+	conf, err := configs.LoadConfig("configs/orchestrator.yml")
 	if err != nil {
 		logger.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Orchestrator initialization
-	orchestrator, err := orchestrator.NewOrchestrator(cfg)
+	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+	app, err := orchestrator.New(conf)
 	if err != nil {
-		logger.Fatalf("Failed to create orchestrator: %v", err)
+		logger.Error("failed to read config")
+		os.Exit(1)
 	}
 
-	// Start HTTP server
-	addr := fmt.Sprintf(":%d", cfg.Server.Port)
-	logger.Infof("Starting server on %s", addr)
-	err = http.ListenAndServe(addr, orchestrator.Router())
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		app.GracefulStop(serverCtx, sig, serverStopCtx)
+	}()
+
+	err = app.Run()
 	if err != nil {
-		logger.Fatalf("Failed to start server: %v", err)
+		logger.Error("failed to start app")
+		os.Exit(1)
 	}
+
+	<-serverCtx.Done()
+
 }

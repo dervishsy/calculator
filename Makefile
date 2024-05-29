@@ -6,6 +6,7 @@ AGENT_BINARY=./$(BINARY_NAME)-agent.exe
 # Commands
 all: clean build
 
+
 #  Remove all binaries
 clean:
 	rm -f $(ORCHESTRATOR_BINARY) $(AGENT_BINARY)
@@ -25,6 +26,10 @@ run-o:
 
 run-a:
 	./$(AGENT_BINARY)
+
+restart: clean 	build
+	start ./$(ORCHESTRATOR_BINARY)
+	start ./$(AGENT_BINARY)
 
 # Run reloaded after source change (requires https://github.com/cosmtrek/air)
 air-o:
