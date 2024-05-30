@@ -111,7 +111,7 @@ make docker-compose
 
 ```
 
-curl --location 'http://localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"expression": "2 + 2 * 2"}'
+curl --location 'http://localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"id":"100" ,"expression": "2 + 2 * 2"}'
 
 ```
 
