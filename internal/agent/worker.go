@@ -78,13 +78,15 @@ func (w *Worker) getTask() (*entities.AgentTask, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		logger.Errorf("Unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
 	}
 
 	var task entities.AgentTask
 	err = json.NewDecoder(resp.Body).Decode(&task)
 	if err != nil {
-		return nil, err
+		logger.Errorf("Failed to decode response body: %v", err)
+		return nil, fmt.Errorf("Failed to decode response")
 	}
 	logger.Infof("Get task: %v", task)
 
@@ -125,7 +127,8 @@ func (w *Worker) sendResult(taskID string, result float64) error {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		logger.Errorf("Failed to marshal: %v", err)
+		return fmt.Errorf("Failed to marshal")
 	}
 
 	resp, err := w.client.Post(url, "application/json", bytes.NewBuffer(body))
@@ -135,7 +138,8 @@ func (w *Worker) sendResult(taskID string, result float64) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		logger.Errorf("Unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
 	}
 
 	return nil

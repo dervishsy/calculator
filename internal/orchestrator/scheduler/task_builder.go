@@ -24,7 +24,9 @@ func TreeToTasks(root *parser.Node, ExprID string) []entities.Task {
 	appendTask(ExprID, root, &tasks)
 
 	// root element to first
-	tasks[0], tasks[len(tasks)-1] = tasks[len(tasks)-1], tasks[0]
+	if len(tasks) > 0 {
+		tasks[0], tasks[len(tasks)-1] = tasks[len(tasks)-1], tasks[0]
+	}
 	return tasks
 }
 

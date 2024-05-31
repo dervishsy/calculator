@@ -66,17 +66,17 @@ func TestTreeToTasks(t *testing.T) {
 		ArgRight:  entities.Arg{ArgFloat: 3.0, ArgType: entities.IsNumber},
 		Operation: "*",
 	}
-	if !Compare(tasks[0], expectedTask) {
+	if !Compare(tasks[1], expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[0])
 	}
 	expectedTask = entities.Task{
 		ID:        uuid.New(),
 		ExprID:    "TestExprID",
-		ArgLeft:   entities.Arg{ArgTask: &tasks[0], ArgType: entities.IsTask},
+		ArgLeft:   entities.Arg{ArgTask: &tasks[1], ArgType: entities.IsTask},
 		ArgRight:  entities.Arg{ArgFloat: 4.0, ArgType: entities.IsNumber},
 		Operation: "+",
 	}
-	if !Compare(tasks[1], expectedTask) {
+	if !Compare(tasks[0], expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[1])
 	}
 }

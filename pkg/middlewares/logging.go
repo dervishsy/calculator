@@ -36,9 +36,9 @@ func MakeLoggingMiddleware(next http.Handler) http.Handler {
 }
 
 func logRequest(_ context.Context, message string, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
+	var body []byte
+	if r.Body != nil {
+		body, _ = io.ReadAll(r.Body)
 	}
 
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
