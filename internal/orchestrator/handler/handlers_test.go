@@ -2,9 +2,9 @@ package handler
 
 import (
 	"calculator/configs"
-	"calculator/internal/orchestrator/expression_storage"
+	"calculator/internal/orchestrator/impl/memory_expression_storage"
+	"calculator/internal/orchestrator/impl/memory_task_storage"
 	"calculator/internal/orchestrator/scheduler"
-	"calculator/internal/orchestrator/tasks"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -32,10 +32,10 @@ func TestHandleCalculate_Success(t *testing.T) {
 	}
 
 	// Create a mock storage
-	mockStorage := expression_storage.NewStorage()
+	mockStorage := memory_expression_storage.NewStorage()
 
 	// Create a mock task pool
-	taskPool := tasks.NewTaskPool()
+	taskPool := memory_task_storage.NewTaskPool()
 
 	// Create a mock scheduler
 	mockScheduler := scheduler.NewScheduler(mockStorage, taskPool, cfg)
@@ -78,10 +78,10 @@ func TestHandleCalculate_DecodeError(t *testing.T) {
 
 	// Create a mock logger
 	// Create a mock storage
-	mockStorage := expression_storage.NewStorage()
+	mockStorage := memory_expression_storage.NewStorage()
 
 	// Create a mock task pool
-	taskPool := tasks.NewTaskPool()
+	taskPool := memory_task_storage.NewTaskPool()
 
 	// Create a mock scheduler
 	mockScheduler := scheduler.NewScheduler(mockStorage, taskPool, cfg)

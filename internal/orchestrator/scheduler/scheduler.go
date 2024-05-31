@@ -3,7 +3,6 @@ package scheduler
 import (
 	"calculator/configs"
 	"calculator/internal/orchestrator/parser"
-	"calculator/internal/orchestrator/tasks"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
 	"errors"
@@ -41,7 +40,7 @@ func (s *Scheduler) ScheduleExpression(id, expr string) error {
 	if err != nil {
 		return err
 	}
-	tasksList := tasks.TreeToTasks(rootNode, id)
+	tasksList := TreeToTasks(rootNode, id)
 
 	s.taskPoll.AddTasks(tasksList)
 

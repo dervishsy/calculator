@@ -1,4 +1,4 @@
-package tasks
+package memory_task_storage
 
 import (
 	"calculator/internal/shared/entities"

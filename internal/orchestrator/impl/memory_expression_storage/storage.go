@@ -1,14 +1,11 @@
-package expression_storage
+package memory_expression_storage
 
 import (
+	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/shared/entities"
 	"errors"
 	"slices"
 	"sync"
-)
-
-var (
-	ErrExpressionNotFound = errors.New("expression not found")
 )
 
 // Storage represents a simple in-memory storage for arithmetic expressions.
@@ -48,7 +45,7 @@ func (s *Storage) GetExpression(id string) (*entities.Expression, error) {
 
 	expr, ok := s.expressions[id]
 	if !ok {
-		return nil, ErrExpressionNotFound
+		return nil, scheduler.ErrExpressionNotFound
 	}
 
 	return expr, nil
@@ -83,7 +80,7 @@ func (s *Storage) UpdateExpression(id string, status entities.ExpressionStatus, 
 
 	expr, ok := s.expressions[id]
 	if !ok {
-		return ErrExpressionNotFound
+		return scheduler.ErrExpressionNotFound
 	}
 
 	expr.Result = result
