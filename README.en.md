@@ -1,6 +1,8 @@
 # Distributed Calculator for Arithmetic Expressions
 
-This is a distributed calculator for arithmetic expressions, written in Go. It consists of an orchestrator and multiple agents that can perform arithmetic operations in parallel.
+This is a distributed calculator for arithmetic expressions, written in Go.
+
+It consists of an orchestrator and multiple agents that can perform arithmetic operations in parallel.
 
 ## Features
 
@@ -9,6 +11,10 @@ This is a distributed calculator for arithmetic expressions, written in Go. It c
 - Parallel execution of arithmetic operations with configurable computing power
 - Configurable operation times to simulate long-running computations
 - Web interface for entering expressions and viewing results
+
+## Requirements
+
+- Go 1.22 or later
 
 ## Installation
 
