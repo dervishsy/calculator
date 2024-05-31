@@ -1,4 +1,4 @@
-package tasks
+package entities
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 type ArgType = int
 
 const (
-	isTask ArgType = iota
-	isNumber
+	IsTask ArgType = iota
+	IsNumber
 )
 
 // Task represents a task in the task pool.
@@ -43,7 +43,7 @@ func (t Task) Compare(t2 Task) bool {
 
 // Compute computes the result of the task.
 func (t Task) Compute() (float64, error) {
-	if t.ArgLeft.ArgType != isNumber || t.ArgRight.ArgType != isNumber {
+	if t.ArgLeft.ArgType != IsNumber || t.ArgRight.ArgType != IsNumber {
 		return 0, fmt.Errorf("invalid arguments")
 	}
 	switch t.Operation {
@@ -62,7 +62,7 @@ func (t Task) Compute() (float64, error) {
 
 // String returns a string representation of the argument.
 func (a Arg) String() string {
-	if a.ArgType == isNumber {
+	if a.ArgType == IsNumber {
 		return fmt.Sprintf("%v", a.ArgFloat)
 	} else {
 		return fmt.Sprintf("%v", a.ArgTask.ID)

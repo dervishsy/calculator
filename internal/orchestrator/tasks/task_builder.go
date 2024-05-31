@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"calculator/internal/orchestrator/parser"
+	"calculator/internal/shared/entities"
 	"calculator/pkg/uuid"
 )
 
@@ -14,11 +15,11 @@ import (
 //
 // Returns:
 // - []Task: The list of tasks representing the arithmetic expression.
-func TreeToTasks(root *parser.Node, ExprID string) []Task {
+func TreeToTasks(root *parser.Node, ExprID string) []entities.Task {
 	if root == nil {
-		return []Task{}
+		return []entities.Task{}
 	}
-	tasks := []Task{}
+	tasks := []entities.Task{}
 
 	appendTask(ExprID, root, &tasks)
 
@@ -27,14 +28,14 @@ func TreeToTasks(root *parser.Node, ExprID string) []Task {
 	return tasks
 }
 
-func appendTask(exprID string, root *parser.Node, tasks *[]Task) *Task {
+func appendTask(exprID string, root *parser.Node, tasks *[]entities.Task) *entities.Task {
 	if root == nil || root.Left == nil || root.Right == nil {
 		return nil
 	}
 
 	leftArg, rightArg := buildArguments(exprID, root, tasks)
 
-	task := &Task{
+	task := &entities.Task{
 		ID:        uuid.New(),
 		ExprID:    exprID,
 		ArgLeft:   leftArg,
@@ -45,18 +46,18 @@ func appendTask(exprID string, root *parser.Node, tasks *[]Task) *Task {
 	return task
 }
 
-func buildArguments(exprID string, root *parser.Node, tasks *[]Task) (Arg, Arg) {
-	var leftArg, rightArg Arg
+func buildArguments(exprID string, root *parser.Node, tasks *[]entities.Task) (entities.Arg, entities.Arg) {
+	var leftArg, rightArg entities.Arg
 	if root.Left.Token.Type == parser.Number {
-		leftArg = Arg{ArgFloat: root.Left.Value, ArgType: isNumber}
+		leftArg = entities.Arg{ArgFloat: root.Left.Value, ArgType: entities.IsNumber}
 	} else {
-		leftArg = Arg{ArgTask: appendTask(exprID, root.Left, tasks), ArgType: isTask}
+		leftArg = entities.Arg{ArgTask: appendTask(exprID, root.Left, tasks), ArgType: entities.IsTask}
 	}
 
 	if root.Right.Token.Type == parser.Number {
-		rightArg = Arg{ArgFloat: root.Right.Value, ArgType: isNumber}
+		rightArg = entities.Arg{ArgFloat: root.Right.Value, ArgType: entities.IsNumber}
 	} else {
-		rightArg = Arg{ArgTask: appendTask(exprID, root.Right, tasks), ArgType: isTask}
+		rightArg = entities.Arg{ArgTask: appendTask(exprID, root.Right, tasks), ArgType: entities.IsTask}
 	}
 	return leftArg, rightArg
 }

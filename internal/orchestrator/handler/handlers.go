@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"calculator/internal/orchestrator/expressionStorage"
 	"calculator/internal/orchestrator/scheduler"
-	"calculator/internal/orchestrator/storage"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
 	"calculator/pkg/utils"
@@ -13,11 +13,11 @@ import (
 // Handler represents the HTTP handler for the orchestrator.
 type Handler struct {
 	scheduler *scheduler.Scheduler
-	storage   *storage.Storage
+	storage   *expressionStorage.Storage
 }
 
 // NewHandler creates a new instance of the Handler.
-func NewHandler(scheduler *scheduler.Scheduler, storage *storage.Storage) *Handler {
+func NewHandler(scheduler *scheduler.Scheduler, storage *expressionStorage.Storage) *Handler {
 	return &Handler{
 		scheduler: scheduler,
 		storage:   storage,
@@ -79,7 +79,7 @@ func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 
 	expr, err := h.storage.GetExpression(id)
 	if err != nil {
-		if err == storage.ErrExpressionNotFound {
+		if err == expressionStorage.ErrExpressionNotFound {
 			if err = utils.RespondWith404(w); err != nil {
 				logger.Error(err)
 			}

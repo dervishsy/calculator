@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Task represents a single arithmetic operation task.
-type Task struct {
+// AgentTask represents a single arithmetic operation task.
+type AgentTask struct {
 	ExprID        string        `json:"-"`
 	ID            string        `json:"id"`
 	Arg1          float64       `json:"arg1"`

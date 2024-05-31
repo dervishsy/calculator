@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"calculator/internal/orchestrator/parser"
+	"calculator/internal/shared/entities"
 	"calculator/pkg/uuid"
 	"testing"
 )
@@ -33,11 +34,11 @@ func TestTreeToTasks(t *testing.T) {
 	if len(tasks) != 1 {
 		t.Errorf("Expected 1 task, got %v", tasks)
 	}
-	expectedTask := Task{
+	expectedTask := entities.Task{
 		ID:        uuid.New(),
 		ExprID:    "TestExprID",
-		ArgLeft:   Arg{ArgFloat: 2.0, ArgType: isNumber},
-		ArgRight:  Arg{ArgFloat: 3.0, ArgType: isNumber},
+		ArgLeft:   entities.Arg{ArgFloat: 2.0, ArgType: entities.IsNumber},
+		ArgRight:  entities.Arg{ArgFloat: 3.0, ArgType: entities.IsNumber},
 		Operation: "+",
 	}
 	if !tasks[0].Compare(expectedTask) {
@@ -58,21 +59,21 @@ func TestTreeToTasks(t *testing.T) {
 	if len(tasks) != 2 {
 		t.Errorf("Expected 2 tasks, got %v", tasks)
 	}
-	expectedTask = Task{
+	expectedTask = entities.Task{
 		ID:        uuid.New(),
 		ExprID:    "TestExprID",
-		ArgLeft:   Arg{ArgFloat: 2.0, ArgType: isNumber},
-		ArgRight:  Arg{ArgFloat: 3.0, ArgType: isNumber},
+		ArgLeft:   entities.Arg{ArgFloat: 2.0, ArgType: entities.IsNumber},
+		ArgRight:  entities.Arg{ArgFloat: 3.0, ArgType: entities.IsNumber},
 		Operation: "*",
 	}
 	if !tasks[0].Compare(expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[0])
 	}
-	expectedTask = Task{
+	expectedTask = entities.Task{
 		ID:        uuid.New(),
 		ExprID:    "TestExprID",
-		ArgLeft:   Arg{ArgTask: &tasks[0], ArgType: isTask},
-		ArgRight:  Arg{ArgFloat: 4.0, ArgType: isNumber},
+		ArgLeft:   entities.Arg{ArgTask: &tasks[0], ArgType: entities.IsTask},
+		ArgRight:  entities.Arg{ArgFloat: 4.0, ArgType: entities.IsNumber},
 		Operation: "+",
 	}
 	if !tasks[1].Compare(expectedTask) {

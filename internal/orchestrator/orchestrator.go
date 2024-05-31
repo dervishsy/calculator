@@ -2,9 +2,9 @@ package orchestrator
 
 import (
 	"calculator/configs"
+	"calculator/internal/orchestrator/expressionStorage"
 	"calculator/internal/orchestrator/handler"
 	"calculator/internal/orchestrator/scheduler"
-	"calculator/internal/orchestrator/storage"
 	"calculator/internal/orchestrator/web"
 	"calculator/pkg/logger"
 	"context"
@@ -55,7 +55,7 @@ func New(conf *configs.Config) (*App, error) {
 // Router returns the router for the orchestrator.
 func (o *App) Router() http.Handler {
 	mux := http.NewServeMux()
-	storage := storage.NewStorage()
+	storage := expressionStorage.NewStorage()
 	sheduler := scheduler.NewScheduler(storage, o.conf)
 
 	handler := handler.NewHandler(sheduler, storage)

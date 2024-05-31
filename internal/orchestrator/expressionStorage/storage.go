@@ -1,7 +1,6 @@
-package storage
+package expressionStorage
 
 import (
-	"calculator/internal/orchestrator/tasks"
 	"calculator/internal/shared/entities"
 	"errors"
 	"slices"
@@ -15,7 +14,6 @@ var (
 // Storage represents a simple in-memory storage for arithmetic expressions.
 type Storage struct {
 	expressions map[string]*entities.Expression
-	taskIDs     map[string]string
 	mu          sync.RWMutex
 }
 
@@ -23,12 +21,11 @@ type Storage struct {
 func NewStorage() *Storage {
 	return &Storage{
 		expressions: make(map[string]*entities.Expression),
-		taskIDs:     make(map[string]string),
 	}
 }
 
 // CreateExpression creates a new arithmetic expression.
-func (s *Storage) CreateExpression(id string, expr string, tasksList []tasks.Task) error {
+func (s *Storage) CreateExpression(id string, expr string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -40,9 +37,6 @@ func (s *Storage) CreateExpression(id string, expr string, tasksList []tasks.Tas
 		ID:         id,
 		Expression: expr,
 		Status:     entities.ExpressionStatusPending,
-	}
-	for _, task := range tasksList {
-		s.taskIDs[task.ID] = id
 	}
 	return nil
 }
@@ -96,22 +90,4 @@ func (s *Storage) UpdateExpression(id string, status entities.ExpressionStatus, 
 	expr.Status = status
 
 	return nil
-}
-
-// GetExpressionByTaskID retrieves the arithmetic expression associated with a task ID.
-func (s *Storage) GetExpressionByTaskID(taskID string) (*entities.Expression, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	exprID, ok := s.taskIDs[taskID]
-	if !ok {
-		return nil, ErrExpressionNotFound
-	}
-
-	expr, ok := s.expressions[exprID]
-	if !ok {
-		return nil, ErrExpressionNotFound
-	}
-
-	return expr, nil
 }

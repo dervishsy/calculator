@@ -3,7 +3,6 @@ package scheduler
 import (
 	"calculator/configs"
 	"calculator/internal/orchestrator/parser"
-	"calculator/internal/orchestrator/storage"
 	"calculator/internal/orchestrator/tasks"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
@@ -19,12 +18,12 @@ var (
 // Scheduler is responsible for managing the execution of arithmetic expressions.
 type Scheduler struct {
 	cfg      *configs.Config
-	storage  *storage.Storage
-	taskPoll *tasks.TaskPool
+	storage  ExpressionService
+	taskPoll TaskService
 }
 
 // NewScheduler creates a new instance of the Scheduler.
-func NewScheduler(storage *storage.Storage, cfg *configs.Config) *Scheduler {
+func NewScheduler(storage ExpressionService, cfg *configs.Config) *Scheduler {
 	return &Scheduler{
 		cfg:      cfg,
 		storage:  storage,
@@ -46,11 +45,11 @@ func (s *Scheduler) ScheduleExpression(id, expr string) error {
 
 	s.taskPoll.AddTasks(tasksList)
 
-	return s.storage.CreateExpression(id, expr, tasksList)
+	return s.storage.CreateExpression(id, expr)
 }
 
 // GetTask retrieves the next task from the queue.
-func (s *Scheduler) GetTask() (*entities.Task, error) {
+func (s *Scheduler) GetTask() (*entities.AgentTask, error) {
 	task, err := s.taskPoll.GetTaskToCompute()
 
 	if err != nil {
@@ -64,12 +63,10 @@ func (s *Scheduler) GetTask() (*entities.Task, error) {
 // Deletes the task from the queue after processing.
 func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 
-	expr, err := s.storage.GetExpressionByTaskID(taskID)
+	exprID, err := s.taskPoll.GetExpressionIDByTaskID(taskID)
+
 	if err != nil {
-		if err == storage.ErrExpressionNotFound {
-			return ErrTaskNotFound
-		}
-		return err
+		return ErrTaskNotFound
 	}
 
 	err = s.taskPoll.SetTaskResultAfterCompute(taskID, result)
@@ -86,21 +83,22 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 	if !isLastTask {
 		return nil
 	}
-	s.taskPoll.DeleteExpression(expr.ID)
-	if err = s.storage.UpdateExpression(expr.ID, entities.ExpressionStatusCompleted, result); err != nil {
-		return err
+
+	if isLastTask {
+		logger.Infof("Expression %s completed with result %f", exprID, result)
 	}
 
-	if expr.Status == entities.ExpressionStatusCompleted {
-		logger.Infof("Expression %s completed with result %f", expr.ID, result)
+	s.taskPoll.DeleteExpression(exprID)
+	if err = s.storage.UpdateExpression(exprID, entities.ExpressionStatusCompleted, result); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *Scheduler) taskToAgentTask(task tasks.Task) entities.Task {
+func (s *Scheduler) taskToAgentTask(task entities.Task) entities.AgentTask {
 
-	return entities.Task{
+	return entities.AgentTask{
 		ExprID:        task.ExprID,
 		ID:            task.ID,
 		Arg1:          task.ArgLeft.ArgFloat,

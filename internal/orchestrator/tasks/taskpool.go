@@ -1,13 +1,14 @@
 package tasks
 
 import (
+	"calculator/internal/shared/entities"
 	"fmt"
 	"sync"
 )
 
 // TaskPool is a struct that represents a task pool in the orchestrator.
 type TaskPool struct {
-	tasks           map[string]*Task
+	tasks           map[string]*entities.Task
 	taskOwners      map[string]string
 	sentTasks       map[string]bool
 	expressionsRoot map[string]string
@@ -17,7 +18,7 @@ type TaskPool struct {
 // NewTaskPool creates a new instance of the TaskPool struct.
 func NewTaskPool() *TaskPool {
 	taskPool := &TaskPool{
-		tasks:           make(map[string]*Task),
+		tasks:           make(map[string]*entities.Task),
 		sentTasks:       make(map[string]bool),
 		taskOwners:      make(map[string]string),
 		expressionsRoot: make(map[string]string),
@@ -28,17 +29,17 @@ func NewTaskPool() *TaskPool {
 }
 
 // AddTasks adds a slice of tasks to the task pool.
-func (tp *TaskPool) AddTasks(tasks []Task) {
+func (tp *TaskPool) AddTasks(tasks []entities.Task) {
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
 
 	for _, task := range tasks {
 		tp.tasks[task.ID] = &task
-		if task.ArgLeft.ArgType == isTask {
+		if task.ArgLeft.ArgType == entities.IsTask {
 			tp.taskOwners[task.ArgLeft.ArgTask.ID] = task.ID
 		}
 
-		if task.ArgRight.ArgType == isTask {
+		if task.ArgRight.ArgType == entities.IsTask {
 			tp.taskOwners[task.ArgRight.ArgTask.ID] = task.ID
 		}
 	}
@@ -47,19 +48,19 @@ func (tp *TaskPool) AddTasks(tasks []Task) {
 }
 
 // GetTaskToCompute returns the next task to compute in the task pool.
-func (tp *TaskPool) GetTaskToCompute() (Task, error) {
+func (tp *TaskPool) GetTaskToCompute() (entities.Task, error) {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
 	for _, task := range tp.tasks {
-		if task.ArgLeft.ArgType == isNumber &&
-			task.ArgRight.ArgType == isNumber &&
+		if task.ArgLeft.ArgType == entities.IsNumber &&
+			task.ArgRight.ArgType == entities.IsNumber &&
 			!tp.sentTasks[task.ID] {
 
 			tp.sentTasks[task.ID] = true
 			return *task, nil
 		}
 	}
-	return Task{}, fmt.Errorf("no tasks to compute")
+	return entities.Task{}, fmt.Errorf("no tasks to compute")
 }
 
 // SetTaskResultAfterCompute sets the result of a task after it has been computed.
@@ -85,10 +86,10 @@ func (tp *TaskPool) SetTaskResultAfterCompute(id string, result float64) error {
 	owner := tp.tasks[ownerID]
 
 	if tp.isIdArg(id, owner.ArgLeft) {
-		owner.ArgLeft.ArgType = isNumber
+		owner.ArgLeft.ArgType = entities.IsNumber
 		owner.ArgLeft.ArgFloat = result
 	} else if tp.isIdArg(id, owner.ArgRight) {
-		owner.ArgRight.ArgType = isNumber
+		owner.ArgRight.ArgType = entities.IsNumber
 		owner.ArgRight.ArgFloat = result
 	} else {
 		return fmt.Errorf("task %s owner not found", id)
@@ -132,9 +133,21 @@ func (tp *TaskPool) IsLastTask(id string) (bool, error) {
 	return false, nil
 }
 
-func (tp *TaskPool) isIdArg(id string, arg Arg) bool {
+func (tp *TaskPool) GetExpressionIDByTaskID(taskID string) (string, error) {
+	tp.mu.RLock()
+	defer tp.mu.RUnlock()
 
-	if arg.ArgType == isTask && arg.ArgTask.ID == id {
+	task, ok := tp.tasks[taskID]
+	if !ok {
+		return "", fmt.Errorf("task %s not found", taskID)
+	}
+
+	return task.ExprID, nil
+}
+
+func (tp *TaskPool) isIdArg(id string, arg entities.Arg) bool {
+
+	if arg.ArgType == entities.IsTask && arg.ArgTask.ID == id {
 		return true
 	}
 	return false

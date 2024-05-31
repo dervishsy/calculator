@@ -64,7 +64,7 @@ func (w *Worker) doWork() {
 	}
 }
 
-func (w *Worker) getTask() (*entities.Task, error) {
+func (w *Worker) getTask() (*entities.AgentTask, error) {
 	url := fmt.Sprintf("%s/internal/task", w.orchestratorURL)
 	resp, err := w.client.Get(url)
 	if err != nil {
@@ -81,7 +81,7 @@ func (w *Worker) getTask() (*entities.Task, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var task entities.Task
+	var task entities.AgentTask
 	err = json.NewDecoder(resp.Body).Decode(&task)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (w *Worker) getTask() (*entities.Task, error) {
 	return &task, nil
 }
 
-func (w *Worker) performOperation(task *entities.Task) (float64, error) {
+func (w *Worker) performOperation(task *entities.AgentTask) (float64, error) {
 	var result float64
 
 	switch task.Operation {
