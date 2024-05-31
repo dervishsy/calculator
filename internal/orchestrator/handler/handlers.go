@@ -12,14 +12,12 @@ import (
 // Handler represents the HTTP handler for the orchestrator.
 type Handler struct {
 	scheduler *scheduler.Scheduler
-	storage   scheduler.ExpressionService
 }
 
 // NewHandler creates a new instance of the Handler.
-func NewHandler(scheduler *scheduler.Scheduler, storage scheduler.ExpressionService) *Handler {
+func NewHandler(scheduler *scheduler.Scheduler) *Handler {
 	return &Handler{
 		scheduler: scheduler,
-		storage:   storage,
 	}
 }
 
@@ -54,7 +52,7 @@ func (h *Handler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
 
 // HandleGetExpressions handles the request to get a list of expressions.
 func (h *Handler) HandleGetExpressions(w http.ResponseWriter, r *http.Request) {
-	expressions, err := h.storage.GetExpressions()
+	expressions, err := h.scheduler.GetExpressions()
 	if err != nil {
 		logger.Errorf("Failed to get expressions: %v", err)
 		if err = utils.RespondWith500(w); err != nil {
@@ -76,7 +74,7 @@ func (h *Handler) HandleGetExpressions(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	expr, err := h.storage.GetExpression(id)
+	expr, err := h.scheduler.GetExpression(id)
 	if err != nil {
 		if err == scheduler.ErrExpressionNotFound {
 			if err = utils.RespondWith404(w); err != nil {

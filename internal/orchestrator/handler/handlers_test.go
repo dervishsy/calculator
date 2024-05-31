@@ -43,7 +43,6 @@ func TestHandleCalculate_Success(t *testing.T) {
 	// Create a new handler
 	handler := &Handler{
 		scheduler: mockScheduler,
-		storage:   mockStorage,
 	}
 
 	// Call the function being tested
@@ -89,7 +88,6 @@ func TestHandleCalculate_DecodeError(t *testing.T) {
 	// Create a new handler
 	handler := &Handler{
 		scheduler: mockScheduler,
-		storage:   mockStorage,
 	}
 
 	// Call the function being tested

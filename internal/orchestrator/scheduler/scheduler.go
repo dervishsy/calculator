@@ -121,3 +121,13 @@ func (s *Scheduler) getOperationTime(operation string) time.Duration {
 
 	return time.Duration(opTime) * time.Millisecond
 }
+
+// GetExpression retrieves an arithmetic expression by its ID.
+func (s *Scheduler) GetExpression(id string) (*entities.Expression, error) {
+	return s.storage.GetExpression(id)
+}
+
+// GetExpressions retrieves all arithmetic expressions.
+func (s *Scheduler) GetExpressions() ([]entities.Expression, error) {
+	return s.storage.GetExpressions()
+}

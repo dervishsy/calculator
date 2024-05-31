@@ -57,10 +57,10 @@ func New(conf *configs.Config) (*App, error) {
 func (o *App) Router() http.Handler {
 	mux := http.NewServeMux()
 	storage := memory_expression_storage.NewStorage()
-	taskPool := memory_task_storage.NewTaskPool()
-	sheduler := scheduler.NewScheduler(storage, taskPool, o.conf)
+	task_pool := memory_task_storage.NewTaskPool()
+	sheduler := scheduler.NewScheduler(storage, task_pool, o.conf)
 
-	handler := handler.NewHandler(sheduler, storage)
+	handler := handler.NewHandler(sheduler)
 	handler.RegisterRoutes(mux)
 
 	web.RegisterRoutes(mux)
