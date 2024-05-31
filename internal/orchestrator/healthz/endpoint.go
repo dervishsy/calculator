@@ -30,3 +30,7 @@ func MakeHandler(info *entities.AppInfo) func(w http.ResponseWriter, r *http.Req
 		}
 	}
 }
+
+func RegisterRoutes(r *http.ServeMux, appInfo *entities.AppInfo) {
+	r.HandleFunc("GET /healthz", MakeHandler(appInfo))
+}

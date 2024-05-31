@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"calculator/configs"
 	"calculator/internal/orchestrator/handler"
+	"calculator/internal/orchestrator/healthz"
 	"calculator/internal/orchestrator/impl/memory_expression_storage"
 	"calculator/internal/orchestrator/impl/memory_task_storage"
 	"calculator/internal/orchestrator/scheduler"
@@ -69,7 +70,9 @@ func (o *App) Router() http.Handler {
 	sheduler := scheduler.NewScheduler(storage, task_pool, o.conf)
 
 	handler := handler.NewHandler(sheduler)
-	handler.RegisterRoutes(mux, appInfo)
+	handler.RegisterRoutes(mux)
+
+	healthz.RegisterRoutes(mux, appInfo)
 
 	web.RegisterRoutes(mux)
 
