@@ -1,4 +1,4 @@
-package expressionStorage
+package expression_storage
 
 import (
 	"calculator/internal/shared/entities"

@@ -13,3 +13,27 @@ type AgentTask struct {
 	Operation     string        `json:"operation"`
 	OperationTime time.Duration `json:"operationTime"`
 }
+
+type ArgType = int
+
+const (
+	IsTask ArgType = iota
+	IsNumber
+)
+
+// Task represents a task in the task pool.
+type Task struct {
+	ExprID    string
+	ID        string
+	ArgLeft   Arg
+	ArgRight  Arg
+	Operation string
+	Result    float64
+}
+
+// Arg represents an argument in a task.
+type Arg struct {
+	ArgFloat float64
+	ArgTask  *Task
+	ArgType  ArgType
+}

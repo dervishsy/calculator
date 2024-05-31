@@ -41,7 +41,7 @@ func TestTreeToTasks(t *testing.T) {
 		ArgRight:  entities.Arg{ArgFloat: 3.0, ArgType: entities.IsNumber},
 		Operation: "+",
 	}
-	if !tasks[0].Compare(expectedTask) {
+	if !Compare(tasks[0], expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[0])
 	}
 
@@ -66,7 +66,7 @@ func TestTreeToTasks(t *testing.T) {
 		ArgRight:  entities.Arg{ArgFloat: 3.0, ArgType: entities.IsNumber},
 		Operation: "*",
 	}
-	if !tasks[0].Compare(expectedTask) {
+	if !Compare(tasks[0], expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[0])
 	}
 	expectedTask = entities.Task{
@@ -76,7 +76,15 @@ func TestTreeToTasks(t *testing.T) {
 		ArgRight:  entities.Arg{ArgFloat: 4.0, ArgType: entities.IsNumber},
 		Operation: "+",
 	}
-	if !tasks[1].Compare(expectedTask) {
+	if !Compare(tasks[1], expectedTask) {
 		t.Errorf("Expected task %v, got %v", expectedTask, tasks[1])
 	}
+}
+
+// Compare compares two tasks and returns true if they are the same.
+func Compare(t, t2 entities.Task) bool {
+	return t.ExprID == t2.ExprID &&
+		t.Operation == t2.Operation &&
+		t.ArgLeft.ArgFloat == t2.ArgLeft.ArgFloat &&
+		t.ArgRight.ArgFloat == t2.ArgRight.ArgFloat
 }
