@@ -5,6 +5,7 @@ import (
 	"calculator/internal/orchestrator/expression_storage"
 	"calculator/internal/orchestrator/handler"
 	"calculator/internal/orchestrator/scheduler"
+	"calculator/internal/orchestrator/tasks"
 	"calculator/internal/orchestrator/web"
 	"calculator/pkg/logger"
 	"context"
@@ -56,7 +57,8 @@ func New(conf *configs.Config) (*App, error) {
 func (o *App) Router() http.Handler {
 	mux := http.NewServeMux()
 	storage := expression_storage.NewStorage()
-	sheduler := scheduler.NewScheduler(storage, o.conf)
+	taskPool := tasks.NewTaskPool()
+	sheduler := scheduler.NewScheduler(storage, taskPool, o.conf)
 
 	handler := handler.NewHandler(sheduler, storage)
 	handler.RegisterRoutes(mux)

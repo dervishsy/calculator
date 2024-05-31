@@ -23,11 +23,11 @@ type Scheduler struct {
 }
 
 // NewScheduler creates a new instance of the Scheduler.
-func NewScheduler(storage ExpressionService, cfg *configs.Config) *Scheduler {
+func NewScheduler(storage ExpressionService, task_poll TaskService, cfg *configs.Config) *Scheduler {
 	return &Scheduler{
 		cfg:      cfg,
 		storage:  storage,
-		taskPoll: tasks.NewTaskPool(),
+		taskPoll: task_poll,
 	}
 }
 
