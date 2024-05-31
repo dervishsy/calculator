@@ -7,6 +7,7 @@ import (
 	"calculator/internal/orchestrator/impl/memory_task_storage"
 	"calculator/internal/orchestrator/scheduler"
 	"calculator/internal/orchestrator/web"
+	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
 	"context"
 	"fmt"
@@ -17,6 +18,12 @@ import (
 
 	"calculator/pkg/middlewares"
 )
+
+var appInfo = &entities.AppInfo{
+	Name:         "Expression Calculator",
+	BuildVersion: "1.0.0",
+	BuildTime:    time.Now().Format(time.RFC3339),
+}
 
 // Orchestrator represents the orchestrator.
 
@@ -55,13 +62,14 @@ func New(conf *configs.Config) (*App, error) {
 
 // Router returns the router for the orchestrator.
 func (o *App) Router() http.Handler {
+
 	mux := http.NewServeMux()
 	storage := memory_expression_storage.NewStorage()
 	task_pool := memory_task_storage.NewTaskPool()
 	sheduler := scheduler.NewScheduler(storage, task_pool, o.conf)
 
 	handler := handler.NewHandler(sheduler)
-	handler.RegisterRoutes(mux)
+	handler.RegisterRoutes(mux, appInfo)
 
 	web.RegisterRoutes(mux)
 
