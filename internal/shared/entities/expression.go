@@ -1,4 +1,4 @@
-package entity
+package entities
 
 // ExpressionStatus represents the status of an arithmetic expression.
 type ExpressionStatus string

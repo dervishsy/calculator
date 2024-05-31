@@ -1,4 +1,4 @@
-package entity
+package entities
 
 // TaskResult represents the result of a task computation.
 type TaskResult struct {
