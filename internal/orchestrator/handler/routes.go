@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"calculator/internal/healthz"
+	"calculator/internal/orchestrator/healthz"
 	"calculator/internal/shared/entities"
 	"net/http"
 )
