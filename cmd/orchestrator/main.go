@@ -1,8 +1,8 @@
 package main
 
 import (
-	"calculator/configs"
 	"calculator/internal/orchestrator"
+	"calculator/internal/shared/configs"
 	"calculator/pkg/logger"
 	"context"
 	"os"

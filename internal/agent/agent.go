@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"calculator/configs"
+	"calculator/internal/shared/configs"
 	"calculator/pkg/logger"
 	"context"
 	"net/http"

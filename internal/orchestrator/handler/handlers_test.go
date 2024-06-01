@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"calculator/configs"
 	"calculator/internal/orchestrator/impl/memory_expression_storage"
 	"calculator/internal/orchestrator/impl/memory_task_storage"
 	"calculator/internal/orchestrator/use_cases/scheduler"
+	"calculator/internal/shared/configs"
 	"net/http"
 	"net/http/httptest"
 	"strings"

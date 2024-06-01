@@ -1,12 +1,12 @@
 package orchestrator
 
 import (
-	"calculator/configs"
 	"calculator/internal/orchestrator/handler"
 	"calculator/internal/orchestrator/impl/memory_expression_storage"
 	"calculator/internal/orchestrator/impl/memory_task_storage"
 	"calculator/internal/orchestrator/use_cases/scheduler"
 	"calculator/internal/orchestrator/web"
+	"calculator/internal/shared/configs"
 	"calculator/pkg/logger"
 	"calculator/pkg/metrics/entities"
 	"calculator/pkg/metrics/healthz"

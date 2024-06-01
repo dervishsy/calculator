@@ -1,9 +1,9 @@
 package scheduler
 
 import (
-	"calculator/configs"
 	use_cases_errors "calculator/internal/orchestrator/use_cases/errors"
 	"calculator/internal/orchestrator/use_cases/parser"
+	"calculator/internal/shared/configs"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
 	"time"
