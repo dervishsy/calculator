@@ -72,3 +72,105 @@ func TestGetTaskToCompute(t *testing.T) {
 		t.Errorf("Expected error, got nil")
 	}
 }
+func TestSetTaskResultAfterCompute1(t *testing.T) {
+	// Test case 1: Task not found
+	tp := &TaskPool{
+		tasks: map[string]*entities.Task{
+			"task1": {ID: "task1"},
+		},
+	}
+	err := tp.SetTaskResultAfterCompute("task2", 1.0)
+	if err == nil {
+		t.Errorf("Expected error for task not found, got nil")
+	}
+
+	// Test case 2: Task is root of expression
+	tp = &TaskPool{
+		tasks: map[string]*entities.Task{
+			"task1": {ID: "task1"},
+		},
+		expressionsRoot: map[string]string{
+			"task1": "task1",
+		},
+	}
+	err = tp.SetTaskResultAfterCompute("task1", 1.0)
+	if err != nil {
+		t.Errorf("Expected no error for task is root of expression, got %v", err)
+	}
+
+	// Test case 3: Task owner not found
+	tp = &TaskPool{
+		tasks: map[string]*entities.Task{
+			"task1": {ID: "task1"},
+			"task2": {ID: "task2"},
+		},
+		taskOwners: map[string]string{
+			"task1": "task1",
+		},
+	}
+	err = tp.SetTaskResultAfterCompute("task2", 1.0)
+	if err == nil {
+		t.Errorf("Expected error for task owner not found, got nil")
+	}
+}
+
+func TestSetTaskResultAfterCompute2(t *testing.T) {
+
+	// Test case 4: Task owner found, ArgLeft is the task
+	tp := &TaskPool{
+		tasks: map[string]*entities.Task{
+			"task1": {
+				ID: "task1",
+				ArgLeft: entities.Arg{
+					ArgType: entities.IsTask,
+					ArgTask: &entities.Task{
+						ID: "task2",
+					},
+				},
+			},
+			"task2": {
+				ID: "task2",
+			},
+		},
+		taskOwners: map[string]string{
+			"task2": "task1",
+		},
+	}
+	err := tp.SetTaskResultAfterCompute("task2", 1.0)
+	if err != nil {
+		t.Errorf("Expected no error for task owner found, got %v", err)
+	}
+	if tp.tasks["task1"].ArgLeft.ArgType != entities.IsNumber || tp.tasks["task1"].ArgLeft.ArgFloat != 1.0 {
+		t.Errorf("Expected ArgLeft to be updated, got %v", tp.tasks["task1"].ArgLeft)
+	}
+
+	// Test case 5: Task owner found, ArgRight is the task
+	tp = &TaskPool{
+		tasks: map[string]*entities.Task{
+			"task1": {
+				ID: "task1",
+				ArgRight: entities.Arg{
+					ArgType:  entities.IsNumber,
+					ArgFloat: 1.0,
+				},
+				ArgLeft: entities.Arg{
+					ArgType: entities.IsTask,
+					ArgTask: &entities.Task{ID: "task2"},
+				},
+			},
+			"task2": {
+				ID: "task2",
+			},
+		},
+		taskOwners: map[string]string{
+			"task2": "task1",
+		},
+	}
+	err = tp.SetTaskResultAfterCompute("task2", 1.0)
+	if err != nil {
+		t.Errorf("Expected no error for task owner found, got %v", err)
+	}
+	if tp.tasks["task1"].ArgRight.ArgType != entities.IsNumber || tp.tasks["task1"].ArgRight.ArgFloat != 1.0 {
+		t.Errorf("Expected ArgRight to be updated, got %v", tp.tasks["task1"].ArgRight)
+	}
+}

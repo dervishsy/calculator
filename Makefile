@@ -61,7 +61,7 @@ test:
 # Test coverage
 cover:
 	go test -v -coverpkg=./... -coverprofile=./.tmp/.cover.out  ./...
-	go tool cover -html=./tmp/.cover.out
+	go tool cover -html=./.tmp/.cover.out
 
 # Test coverage as SVG (requires https://github.com/nikolaydubina/go-cover-treemap)
 cover-svg:
