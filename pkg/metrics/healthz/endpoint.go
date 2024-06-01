@@ -1,8 +1,8 @@
 package healthz
 
 import (
-	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
+	"calculator/pkg/metrics/entities"
 	"calculator/pkg/utils"
 	"net/http"
 )

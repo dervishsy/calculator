@@ -4,7 +4,7 @@ import (
 	"calculator/configs"
 	"calculator/internal/orchestrator/impl/memory_expression_storage"
 	"calculator/internal/orchestrator/impl/memory_task_storage"
-	"calculator/internal/orchestrator/scheduler"
+	"calculator/internal/orchestrator/use_cases/scheduler"
 	"net/http"
 	"net/http/httptest"
 	"strings"

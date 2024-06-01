@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"calculator/internal/orchestrator/scheduler"
+	use_cases_errors "calculator/internal/orchestrator/use_cases/errors"
+	"calculator/internal/orchestrator/use_cases/scheduler"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
 	"calculator/pkg/utils"
@@ -76,7 +77,7 @@ func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 
 	expr, err := h.scheduler.GetExpression(id)
 	if err != nil {
-		if err == scheduler.ErrExpressionNotFound {
+		if err == use_cases_errors.ErrExpressionNotFound {
 			if err = utils.RespondWith404(w); err != nil {
 				logger.Error(err)
 			}
@@ -102,7 +103,7 @@ func (h *Handler) HandleGetExpression(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleGetTask(w http.ResponseWriter, r *http.Request) {
 	task, err := h.scheduler.GetTask()
 	if err != nil {
-		if err == scheduler.ErrNoTasksAvailable {
+		if err == use_cases_errors.ErrNoTasksAvailable {
 			if err = utils.RespondWith404(w); err != nil {
 				logger.Error(err)
 			}
@@ -139,7 +140,7 @@ func (h *Handler) HandlePostTask(w http.ResponseWriter, r *http.Request) {
 	err = h.scheduler.ProcessResult(result.ID, result.Result)
 	if err != nil {
 		logger.Errorf("Failed to process result: %v", err)
-		if err == scheduler.ErrTaskNotFound {
+		if err == use_cases_errors.ErrTaskNotFound {
 			if err = utils.RespondWith404(w); err != nil {
 				logger.Error(err)
 			}

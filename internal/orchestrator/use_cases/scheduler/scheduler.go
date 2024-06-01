@@ -2,16 +2,11 @@ package scheduler
 
 import (
 	"calculator/configs"
-	"calculator/internal/orchestrator/parser"
+	use_cases_errors "calculator/internal/orchestrator/use_cases/errors"
+	"calculator/internal/orchestrator/use_cases/parser"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
-	"errors"
 	"time"
-)
-
-var (
-	ErrNoTasksAvailable = errors.New("no tasks available")
-	ErrTaskNotFound     = errors.New("task not found")
 )
 
 // Scheduler is responsible for managing the execution of arithmetic expressions.
@@ -33,7 +28,8 @@ func NewScheduler(storage ExpressionService, task_poll TaskService, cfg *configs
 // ScheduleExpression schedules an arithmetic expression for execution.
 func (s *Scheduler) ScheduleExpression(id, expr string) error {
 	if _, err := s.storage.GetExpression(id); err == nil {
-		return errors.New("expression already exists")
+		logger.Errorf("Expression with ID %s already exists", id)
+		return use_cases_errors.ErrExpressionExists
 	}
 
 	rootNode, err := parser.Parse(expr)
@@ -52,7 +48,8 @@ func (s *Scheduler) GetTask() (*entities.AgentTask, error) {
 	task, err := s.taskPoll.GetTaskToCompute()
 
 	if err != nil {
-		return nil, ErrNoTasksAvailable
+		logger.Error(err)
+		return nil, use_cases_errors.ErrNoTasksAvailable
 	}
 	agentTask := s.taskToAgentTask(task)
 	return &agentTask, nil
@@ -65,17 +62,20 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 	exprID, err := s.taskPoll.GetExpressionIDByTaskID(taskID)
 
 	if err != nil {
-		return ErrTaskNotFound
+		logger.Error(err)
+		return use_cases_errors.ErrNoTasksAvailable
 	}
 
 	err = s.taskPoll.SetTaskResultAfterCompute(taskID, result)
 	s.taskPoll.DeleteTask(taskID)
 	if err != nil {
+		logger.Error(err)
 		return err
 	}
 
 	isLastTask, err := s.taskPoll.IsLastTask(taskID)
 	if err != nil {
+		logger.Error(err)
 		return err
 	}
 
@@ -89,6 +89,7 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 
 	s.taskPoll.DeleteExpression(exprID)
 	if err = s.storage.UpdateExpression(exprID, entities.ExpressionStatusCompleted, result); err != nil {
+		logger.Error(err)
 		return err
 	}
 

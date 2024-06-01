@@ -1,9 +1,8 @@
 package memory_expression_storage
 
 import (
-	"calculator/internal/orchestrator/scheduler"
+	use_cases_errors "calculator/internal/orchestrator/use_cases/errors"
 	"calculator/internal/shared/entities"
-	"errors"
 	"slices"
 	"sync"
 )
@@ -27,7 +26,7 @@ func (s *Storage) CreateExpression(id string, expr string) error {
 	defer s.mu.Unlock()
 
 	if _, ok := s.expressions[id]; ok {
-		return errors.New("expression already exists")
+		return use_cases_errors.ErrExpressionExists
 	}
 
 	s.expressions[id] = &entities.Expression{
@@ -45,7 +44,7 @@ func (s *Storage) GetExpression(id string) (*entities.Expression, error) {
 
 	expr, ok := s.expressions[id]
 	if !ok {
-		return nil, scheduler.ErrExpressionNotFound
+		return nil, use_cases_errors.ErrExpressionNotFound
 	}
 
 	return expr, nil
@@ -80,7 +79,7 @@ func (s *Storage) UpdateExpression(id string, status entities.ExpressionStatus, 
 
 	expr, ok := s.expressions[id]
 	if !ok {
-		return scheduler.ErrExpressionNotFound
+		return use_cases_errors.ErrExpressionNotFound
 	}
 
 	expr.Result = result

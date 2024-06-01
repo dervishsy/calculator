@@ -2,11 +2,6 @@ package scheduler
 
 import (
 	"calculator/internal/shared/entities"
-	"errors"
-)
-
-var (
-	ErrExpressionNotFound = errors.New("expression not found")
 )
 
 type ExpressionService interface {

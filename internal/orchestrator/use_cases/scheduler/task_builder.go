@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"calculator/internal/orchestrator/parser"
+	"calculator/internal/orchestrator/use_cases/parser"
 	"calculator/internal/shared/entities"
 	"calculator/pkg/uuid"
 )

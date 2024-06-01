@@ -1,7 +1,7 @@
 package memory_expression_storage
 
 import (
-	"calculator/internal/orchestrator/scheduler"
+	use_cases_errors "calculator/internal/orchestrator/use_cases/errors"
 	"calculator/internal/shared/entities"
 	"reflect"
 	"testing"
@@ -77,8 +77,8 @@ func TestGetExpression(t *testing.T) {
 			expressions: map[string]*entities.Expression{},
 		}
 		_, err := storage.GetExpression("1")
-		if err != scheduler.ErrExpressionNotFound {
-			t.Errorf("Expected error %v, got %v", scheduler.ErrExpressionNotFound, err)
+		if err != use_cases_errors.ErrExpressionNotFound {
+			t.Errorf("Expected error %v, got %v", use_cases_errors.ErrExpressionNotFound, err)
 		}
 	})
 }
@@ -199,7 +199,7 @@ func TestUpdateExpression(t *testing.T) {
 
 	// Test case: expression does not exist
 	err = storage.UpdateExpression("2", entities.ExpressionStatusProcessing, 2)
-	if err != scheduler.ErrExpressionNotFound {
-		t.Errorf("expected error to be %v, got %v", scheduler.ErrExpressionNotFound, err)
+	if err != use_cases_errors.ErrExpressionNotFound {
+		t.Errorf("expected error to be %v, got %v", use_cases_errors.ErrExpressionNotFound, err)
 	}
 }
