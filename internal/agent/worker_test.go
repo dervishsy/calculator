@@ -1,79 +1,82 @@
 package agent
 
 import (
-	"bytes"
-	"calculator/internal/shared/entities"
-	"fmt"
-	"io"
-	"net/http"
-	"reflect"
+	"calculator/proto/calculator/proto"
+	"context"
 	"testing"
-	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func TestGetTask(t *testing.T) {
-	// Test successful request
-	worker := &Worker{
-		orchestratorURL: "http://example.com",
-		client:          &http.Client{},
-	}
+type mockCalculatorClient struct {
+	getTaskFunc      func(ctx context.Context, in *proto.GetTaskRequest, opts ...grpc.CallOption) (*proto.Task, error)
+	submitResultFunc func(ctx context.Context, in *proto.TaskResult, opts ...grpc.CallOption) (*proto.SubmitResultResponse, error)
+}
 
+func (m *mockCalculatorClient) GetTask(ctx context.Context, in *proto.GetTaskRequest, opts ...grpc.CallOption) (*proto.Task, error) {
+	return m.getTaskFunc(ctx, in, opts...)
+}
+
+func (m *mockCalculatorClient) SubmitResult(ctx context.Context, in *proto.TaskResult, opts ...grpc.CallOption) (*proto.SubmitResultResponse, error) {
+	return m.submitResultFunc(ctx, in, opts...)
+}
+
+func TestGetTask(t *testing.T) {
 	testCases := []struct {
 		name     string
-		response *http.Response
-		expected *entities.AgentTask
+		mockResp *proto.Task
+		mockErr  error
+		expected *proto.Task
 		errMsg   string
 	}{
 		{
 			name: "valid task",
-			response: &http.Response{
-				StatusCode: http.StatusOK,
-				Body:       io.NopCloser(bytes.NewBufferString(`{"id": "task1", "arg1": 1, "arg2": 2, "operation": "+", "operationTime": 1}`)),
-			},
-			expected: &entities.AgentTask{
-				ID:            "task1",
+			mockResp: &proto.Task{
+				Id:            "task1",
 				Arg1:          1,
 				Arg2:          2,
 				Operation:     "+",
-				OperationTime: time.Duration(1),
+				OperationTime: 1000000, // 1ms in nanoseconds
+			},
+			expected: &proto.Task{
+				Id:            "task1",
+				Arg1:          1,
+				Arg2:          2,
+				Operation:     "+",
+				OperationTime: 1000000,
 			},
 		},
 		{
-			name: "no tasks available",
-			response: &http.Response{
-				StatusCode: http.StatusNotFound,
-				Body:       io.NopCloser(bytes.NewBufferString("")),
-			},
-			expected: nil,
+			name:    "no tasks available",
+			mockErr: status.Error(codes.NotFound, "No tasks available"),
+			errMsg:  "rpc error: code = NotFound desc = No tasks available",
 		},
 		{
-			name: "unexpected status code",
-			response: &http.Response{
-				StatusCode: http.StatusInternalServerError,
-				Body:       io.NopCloser(bytes.NewBufferString("")),
-			},
-			errMsg: "Unexpected status code: 500",
-		},
-		{
-			name: "JSON decoding error",
-			response: &http.Response{
-				StatusCode: http.StatusOK,
-				Body:       io.NopCloser(bytes.NewBufferString(`{"id": "task1", "arg1": "not a number", "arg2": 2, "operation": "+", "operationTime": "1s"}`)),
-			},
-			errMsg: "Failed to decode response",
+			name:    "unexpected error",
+			mockErr: status.Error(codes.Internal, "Internal error"),
+			errMsg:  "rpc error: code = Internal desc = Internal error",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			worker.client.Transport = &mockGetTransport{resp: tc.response}
-			task, err := worker.getTask()
+			worker := &Worker{
+				client: &mockCalculatorClient{
+					getTaskFunc: func(ctx context.Context, in *proto.GetTaskRequest, opts ...grpc.CallOption) (*proto.Task, error) {
+						return tc.mockResp, tc.mockErr
+					},
+				},
+			}
+
+			ctx := context.Background()
+			task, err := worker.getTask(ctx)
 
 			if tc.errMsg != "" {
 				if err == nil {
 					t.Error("Expected error, got nil")
-				}
-				if err.Error() != tc.errMsg {
+				} else if err.Error() != tc.errMsg {
 					t.Errorf("Expected error %q, got %q", tc.errMsg, err.Error())
 				}
 				return
@@ -82,7 +85,11 @@ func TestGetTask(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
-			if !reflect.DeepEqual(task, tc.expected) {
+			if task.Id != tc.expected.Id ||
+				task.Arg1 != tc.expected.Arg1 ||
+				task.Arg2 != tc.expected.Arg2 ||
+				task.Operation != tc.expected.Operation ||
+				task.OperationTime != tc.expected.OperationTime {
 				t.Errorf("Expected task %v, got %v", tc.expected, task)
 			}
 		})
@@ -90,19 +97,15 @@ func TestGetTask(t *testing.T) {
 }
 
 func TestPerformOperation(t *testing.T) {
-	worker := &Worker{
-		orchestratorURL: "http://example.com",
-		client:          &http.Client{},
-	}
-
 	testCases := []struct {
 		name     string
-		task     *entities.AgentTask
+		task     *proto.Task
 		expected float64
+		errMsg   string
 	}{
 		{
 			name: "addition",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "+",
 				Arg1:      2,
 				Arg2:      3,
@@ -111,7 +114,7 @@ func TestPerformOperation(t *testing.T) {
 		},
 		{
 			name: "subtraction",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "-",
 				Arg1:      5,
 				Arg2:      3,
@@ -120,7 +123,7 @@ func TestPerformOperation(t *testing.T) {
 		},
 		{
 			name: "multiplication",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "*",
 				Arg1:      2,
 				Arg2:      4,
@@ -129,7 +132,7 @@ func TestPerformOperation(t *testing.T) {
 		},
 		{
 			name: "division",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "/",
 				Arg1:      6,
 				Arg2:      3,
@@ -138,26 +141,37 @@ func TestPerformOperation(t *testing.T) {
 		},
 		{
 			name: "division by zero",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "/",
 				Arg1:      6,
 				Arg2:      0,
 			},
+			errMsg: "division by zero",
 		},
 		{
 			name: "unknown operation",
-			task: &entities.AgentTask{
+			task: &proto.Task{
 				Operation: "^",
 				Arg1:      2,
 				Arg2:      3,
 			},
+			errMsg: "unknown operation: ^",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			worker := &Worker{}
 			result, err := worker.performOperation(tc.task)
-			if err != nil && tc.expected != 0 {
+			if tc.errMsg != "" {
+				if err == nil {
+					t.Error("Expected error, got nil")
+				} else if err.Error() != tc.errMsg {
+					t.Errorf("Expected error %q, got %q", tc.errMsg, err.Error())
+				}
+				return
+			}
+			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
 			if result != tc.expected {
@@ -168,85 +182,49 @@ func TestPerformOperation(t *testing.T) {
 }
 
 func TestSendResult(t *testing.T) {
-	tests := []struct {
-		name            string
-		taskID          string
-		result          float64
-		orchestratorURL string
-		expectedErr     error
+	testCases := []struct {
+		name        string
+		taskID      string
+		result      float64
+		mockErr     error
+		expectedErr string
 	}{
 		{
-			name:            "Successful send",
-			taskID:          "task123",
-			result:          42.0,
-			orchestratorURL: "http://localhost:8080",
-			expectedErr:     nil,
+			name:   "Successful send",
+			taskID: "task123",
+			result: 42.0,
 		},
 		{
-			name:            "Post error",
-			taskID:          "task123",
-			result:          42.0,
-			orchestratorURL: "http://localhost:8080",
-			expectedErr:     fmt.Errorf("Post \"http://localhost:8080/internal/task\": dial tcp: lookup localhost: No such host"),
-		},
-		{
-			name:            "Marshal error",
-			taskID:          "task123",
-			result:          42.0,
-			orchestratorURL: "http://localhost:8080",
-			expectedErr:     fmt.Errorf(`Post "http://localhost:8080/internal/task": Failed to marshal`),
-		},
-		{
-			name:            "Unexpected status code",
-			taskID:          "task123",
-			result:          42.0,
-			orchestratorURL: "http://localhost:8080",
-			expectedErr:     fmt.Errorf("Post \"http://localhost:8080/internal/task\": unexpected status code: 404"),
+			name:        "Submit error",
+			taskID:      "task123",
+			result:      42.0,
+			mockErr:     status.Error(codes.Internal, "Internal error"),
+			expectedErr: "rpc error: code = Internal desc = Internal error",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := &Worker{
-				orchestratorURL: tt.orchestratorURL,
-				client: &http.Client{
-					Transport: &mockPostTransport{
-						statusCode: http.StatusOK,
-						err:        tt.expectedErr,
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			worker := &Worker{
+				client: &mockCalculatorClient{
+					submitResultFunc: func(ctx context.Context, in *proto.TaskResult, opts ...grpc.CallOption) (*proto.SubmitResultResponse, error) {
+						return &proto.SubmitResultResponse{}, tc.mockErr
 					},
 				},
 			}
 
-			err := w.sendResult(tt.taskID, tt.result)
+			ctx := context.Background()
+			err := worker.sendResult(ctx, tc.taskID, tc.result)
 
-			if tt.expectedErr != nil {
+			if tc.expectedErr != "" {
 				if err == nil {
-					t.Errorf("Expected error: %v, got: nil", tt.expectedErr)
-				} else if err.Error() != tt.expectedErr.Error() {
-					t.Logf("Expected error: %v, got: %v", tt.expectedErr, err)
+					t.Error("Expected error, got nil")
+				} else if err.Error() != tc.expectedErr {
+					t.Errorf("Expected error %q, got %q", tc.expectedErr, err.Error())
 				}
 			} else if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
 		})
 	}
-}
-
-type mockGetTransport struct {
-	resp *http.Response
-}
-
-func (t *mockGetTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return t.resp, nil
-}
-
-type mockPostTransport struct {
-	statusCode int
-	err        error
-}
-
-func (t *mockPostTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return &http.Response{
-		StatusCode: t.statusCode,
-	}, t.err
 }

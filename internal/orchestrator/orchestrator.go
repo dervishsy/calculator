@@ -2,22 +2,28 @@ package orchestrator
 
 import (
 	"calculator/internal/orchestrator/handler"
-	"calculator/internal/orchestrator/impl/memory_expression_storage"
-	"calculator/internal/orchestrator/impl/memory_task_storage"
+	"calculator/internal/orchestrator/impl/sqlite"
+	"calculator/internal/orchestrator/impl/sqlite_expression_storage"
+	"calculator/internal/orchestrator/impl/sqlite_task_storage"
+
 	"calculator/internal/orchestrator/use_cases/scheduler"
 	"calculator/internal/orchestrator/web"
 	"calculator/internal/shared/configs"
 	"calculator/pkg/logger"
 	"calculator/pkg/metrics/entities"
 	"calculator/pkg/metrics/healthz"
+	"calculator/proto/calculator/proto"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	"calculator/pkg/middlewares"
+
+	"google.golang.org/grpc"
 )
 
 var appInfo = &entities.AppInfo{
@@ -29,8 +35,9 @@ var appInfo = &entities.AppInfo{
 // Orchestrator represents the orchestrator.
 
 type App struct {
-	server *http.Server
-	conf   *configs.Config
+	grpcServer *grpc.Server
+	httpServer *http.Server
+	conf       *configs.Config
 }
 
 // NewOrchestrator creates a new instance of the Orchestrator.
@@ -40,65 +47,73 @@ func New(conf *configs.Config) (*App, error) {
 		defaultHTTPServerReadTimeout  = time.Second * 15
 	)
 
-	var err error
-
 	app := new(App)
+	app.conf = conf
 
-	logger.Info("setting TZ ...")
-	if err = os.Setenv("TZ", "UTC"); err != nil {
-		logger.Error("failed to set UTC timezone", err)
-		return nil, err
+	db, err := sqlite.NewSQLiteDB("calculator.db")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SQLite database: %v", err)
 	}
 
-	app.conf = conf
-	app.server = &http.Server{
-		Handler:      app.Router(),
-		Addr:         ":" + strconv.Itoa(conf.Server.Port),
+	// Create separate storages using the same database
+	expressionStorage := sqlite_expression_storage.NewStorage(db)
+	taskStorage := sqlite_task_storage.NewTaskPool(db)
+
+	scheduler := scheduler.NewScheduler(expressionStorage, taskStorage, app.conf)
+
+	// Setup HTTP server
+	httpHandler := handler.NewHandler(scheduler)
+	mux := http.NewServeMux()
+	httpHandler.RegisterRoutes(mux)
+	healthz.RegisterRoutes(mux, appInfo)
+	web.RegisterRoutes(mux)
+
+	wrappedMux := middlewares.MakeLoggingMiddleware(mux)
+	wrappedMux = middlewares.PanicRecoveryMiddleware(wrappedMux)
+
+	app.httpServer = &http.Server{
+		Handler:      wrappedMux,
+		Addr:         ":" + strconv.Itoa(conf.Server.HttpPort),
 		WriteTimeout: defaultHTTPServerWriteTimeout,
 		ReadTimeout:  defaultHTTPServerReadTimeout,
 	}
 
+	// Setup gRPC server
+	app.grpcServer = grpc.NewServer()
+	grpcHandler := handler.NewGRPCHandler(scheduler)
+	proto.RegisterCalculatorServer(app.grpcServer, grpcHandler)
+
 	return app, nil
 }
 
-// Router returns the router for the orchestrator.
-func (o *App) Router() http.Handler {
-
-	mux := http.NewServeMux()
-	storage := memory_expression_storage.NewStorage()
-	task_pool := memory_task_storage.NewTaskPool()
-	sheduler := scheduler.NewScheduler(storage, task_pool, o.conf)
-
-	handler := handler.NewHandler(sheduler)
-	handler.RegisterRoutes(mux)
-
-	healthz.RegisterRoutes(mux, appInfo)
-
-	web.RegisterRoutes(mux)
-
-	result := middlewares.MakeLoggingMiddleware(mux)
-	result = middlewares.PanicRecoveryMiddleware(result)
-
-	return result
-}
-
 func (a *App) Run() error {
-	logger.Info("starting http server...")
-	err := a.server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		return fmt.Errorf("server was stop with err: %w", err)
-	}
-	logger.Info("server was stop")
+	// Start HTTP server
+	go func() {
+		logger.Info("starting http server...")
+		if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("Failed to start HTTP server: %v", err)
+		}
+	}()
 
-	return nil
+	// Start gRPC server
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(a.conf.Server.GrpcPort))
+	if err != nil {
+		return fmt.Errorf("failed to listen for gRPC: %v", err)
+	}
+	logger.Info("starting grpc server...")
+	return a.grpcServer.Serve(lis)
 }
 
 func (a *App) stop(ctx context.Context) error {
 	logger.Info("shutdowning server...")
-	err := a.server.Shutdown(ctx)
+	err := a.httpServer.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("server was shutdown with error: %w", err)
 	}
+
+	// Stop gRPC server
+	a.grpcServer.GracefulStop()
+
 	logger.Info("server was shutdown")
 	return nil
 }

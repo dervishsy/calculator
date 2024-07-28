@@ -1,5 +1,6 @@
 server:
-  port: 8080
+  httpPort: 8080
+  grpcPort: 8081
 timeAdditionMS: 5000
 timeSubtractionMS: 5000
 timeMultiplicationMS: 6000

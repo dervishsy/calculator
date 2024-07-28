@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package calculator;
+
+option go_package = "calculator/proto";
+
+service Calculator {
+  rpc GetTask(GetTaskRequest) returns (Task) {}
+  rpc SubmitResult(TaskResult) returns (SubmitResultResponse) {}
+}
+
+message GetTaskRequest {}
+
+message Task {
+  string expr_id = 1;
+  string id = 2;
+  double arg1 = 3;
+  double arg2 = 4;
+  string operation = 5;
+  int64 operation_time = 6;
+}
+
+message TaskResult {
+  string id = 1;
+  double result = 2;
+}
+
+message SubmitResultResponse {}

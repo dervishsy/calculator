@@ -12,11 +12,11 @@ type ExpressionService interface {
 }
 
 type TaskService interface {
-	AddTasks(tasks []entities.Task)
+	AddTasks(tasks []entities.Task) error
 	GetTaskToCompute() (entities.Task, error)
 	SetTaskResultAfterCompute(id string, result float64) error
-	DeleteTask(id string)
-	DeleteExpression(id string)
+	DeleteTask(id string) error
+	DeleteExpression(id string) error
 	IsLastTask(id string) (bool, error)
 	GetExpressionIDByTaskID(taskID string) (string, error)
 }

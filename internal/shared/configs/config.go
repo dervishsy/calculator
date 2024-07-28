@@ -8,7 +8,8 @@ import (
 )
 
 type Server struct {
-	Port int `yaml:"port"`
+	HttpPort int `yaml:"httpPort"`
+	GrpcPort int `yaml:"grpcPort"`
 }
 
 // Config represents the configuration for the calculator server.
@@ -25,8 +26,8 @@ type Config struct {
 // LoadConfig loads the configuration from a YAML file.
 func LoadConfig(path string) (*Config, error) {
 	defaultConfig := &Config{
-		Server:               Server{Port: 8080},
-		OrchestratorURL:      "http://localhost:8080",
+		Server:               Server{HttpPort: 8080, GrpcPort: 8081},
+		OrchestratorURL:      "localhost:8081",
 		ComputingPower:       4,
 		TimeAdditionMS:       100,
 		TimeSubtractionMS:    200,
@@ -58,7 +59,7 @@ func ConfigFromEnvironment(cfg *Config) {
 	cfg.TimeDivisionMS = getEnvAsInt("TIME_DIVISIONS_MS", cfg.TimeDivisionMS)
 	cfg.ComputingPower = getEnvAsInt("COMPUTING_POWER", cfg.ComputingPower)
 	cfg.OrchestratorURL = getEnvAsString("ORCHESTRATOR_URL", cfg.OrchestratorURL)
-	cfg.Server.Port = getEnvAsInt("SERVER_PORT", cfg.Server.Port)
+	cfg.Server.HttpPort = getEnvAsInt("SERVER_PORT", cfg.Server.HttpPort)
 }
 
 // ConfigFromData loads the configuration from a YAML byte array.

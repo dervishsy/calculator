@@ -38,7 +38,12 @@ func (s *Scheduler) ScheduleExpression(id, expr string) error {
 	}
 	tasksList := TreeToTasks(rootNode, id)
 
-	s.taskPoll.AddTasks(tasksList)
+	err = s.taskPoll.AddTasks(tasksList)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
 	return s.storage.CreateExpression(id, expr)
 }
@@ -67,7 +72,11 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 	}
 
 	err = s.taskPoll.SetTaskResultAfterCompute(taskID, result)
-	s.taskPoll.DeleteTask(taskID)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	err = s.taskPoll.DeleteTask(taskID)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -87,7 +96,12 @@ func (s *Scheduler) ProcessResult(taskID string, result float64) error {
 		logger.Infof("Expression %s completed with result %f", exprID, result)
 	}
 
-	s.taskPoll.DeleteExpression(exprID)
+	err = s.taskPoll.DeleteExpression(exprID)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
 	if err = s.storage.UpdateExpression(exprID, entities.ExpressionStatusCompleted, result); err != nil {
 		logger.Error(err)
 		return err

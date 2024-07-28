@@ -29,7 +29,7 @@ func NewTaskPool() *TaskPool {
 }
 
 // AddTasks adds a slice of tasks to the task pool.
-func (tp *TaskPool) AddTasks(tasks []entities.Task) {
+func (tp *TaskPool) AddTasks(tasks []entities.Task) error {
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
 
@@ -44,7 +44,7 @@ func (tp *TaskPool) AddTasks(tasks []entities.Task) {
 		}
 	}
 	tp.expressionsRoot[tasks[0].ID] = tasks[0].ExprID
-
+	return nil
 }
 
 // GetTaskToCompute returns the next task to compute in the task pool.
@@ -99,7 +99,7 @@ func (tp *TaskPool) SetTaskResultAfterCompute(id string, result float64) error {
 }
 
 // DeleteTask deletes a task from the task pool.
-func (tp *TaskPool) DeleteTask(id string) {
+func (tp *TaskPool) DeleteTask(id string) error {
 
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
@@ -107,16 +107,17 @@ func (tp *TaskPool) DeleteTask(id string) {
 	delete(tp.sentTasks, id)
 	delete(tp.taskOwners, id)
 	delete(tp.tasks, id)
-
+	return nil
 }
 
 // DeleteExpression deletes an expression from the task pool.
-func (tp *TaskPool) DeleteExpression(id string) {
+func (tp *TaskPool) DeleteExpression(id string) error {
 
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
 
 	delete(tp.expressionsRoot, id)
+	return nil
 
 }
 

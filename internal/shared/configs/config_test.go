@@ -80,7 +80,7 @@ func TestConfigFromEnvironment(t *testing.T) {
 func TestConfigFromData(t *testing.T) {
 	// Test case: Valid YAML
 	validConfig := &Config{
-		Server:               Server{Port: 8080},
+		Server:               Server{HttpPort: 8080},
 		OrchestratorURL:      "http://localhost:8080",
 		ComputingPower:       4,
 		TimeAdditionMS:       100,

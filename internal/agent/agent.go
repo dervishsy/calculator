@@ -4,43 +4,49 @@ import (
 	"calculator/internal/shared/configs"
 	"calculator/pkg/logger"
 	"context"
-	"net/http"
 	"sync"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Agent represents a computational agent that can perform arithmetic operations.
+
 type Agent struct {
-	cfg             *configs.Config
-	orchestratorURL string
-	computingPower  int
-	client          *http.Client
-	workers         []*Worker
-	wg              sync.WaitGroup
+	cfg            *configs.Config
+	computingPower int
+	conn           *grpc.ClientConn
+	workers        []*Worker
+	wg             sync.WaitGroup
 }
 
-// NewAgent creates a new instance of the Agent.
 func NewAgent(cfg *configs.Config) (*Agent, error) {
+	conn, err := grpc.NewClient(cfg.OrchestratorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
 
 	agent := &Agent{
-		cfg:             cfg,
-		orchestratorURL: cfg.OrchestratorURL,
-		computingPower:  cfg.ComputingPower,
-		client:          &http.Client{},
-		workers:         make([]*Worker, cfg.ComputingPower),
+		cfg:            cfg,
+		computingPower: cfg.ComputingPower,
+		conn:           conn,
+		workers:        make([]*Worker, cfg.ComputingPower),
 	}
 
 	return agent, nil
 }
 
-// Run starts the agent and its workers.
 func (a *Agent) Run(ctx context.Context) {
 	logger.Info("Starting agent")
 
 	for i := 0; i < a.computingPower; i++ {
-		worker := NewWorker(a.orchestratorURL, a.client)
+		worker := NewWorker(a.conn)
 		a.workers[i] = worker
 		a.wg.Add(1)
-		go worker.Run(ctx, &a.wg)
+		go func() {
+			defer a.wg.Done()
+			worker.Run(ctx)
+		}()
 	}
 
 	a.wg.Wait()

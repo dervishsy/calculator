@@ -1,55 +1,51 @@
 package agent
 
 import (
-	"bytes"
-	"calculator/internal/shared/entities"
 	"calculator/pkg/logger"
+	"calculator/proto/calculator/proto"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"sync"
+	"strings"
 	"time"
+
+	"google.golang.org/grpc"
 )
 
 // Worker represents a computational worker that can perform arithmetic operations.
 type Worker struct {
-	orchestratorURL string
-	client          *http.Client
+	client proto.CalculatorClient
 }
 
 // NewWorker creates a new instance of the Worker.
-func NewWorker(orchestratorURL string, client *http.Client) *Worker {
+func NewWorker(conn *grpc.ClientConn) *Worker {
 	return &Worker{
-		orchestratorURL: orchestratorURL,
-		client:          client,
+		client: proto.NewCalculatorClient(conn),
 	}
 }
 
 // Run starts the worker and its main loop.
-func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (w *Worker) Run(ctx context.Context) {
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			w.doWork()
+			w.doWork(ctx)
 		}
 	}
 }
 
-func (w *Worker) doWork() {
-	task, err := w.getTask()
+func (w *Worker) doWork(ctx context.Context) {
+	task, err := w.getTask(ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "no tasks available") {
+			time.Sleep(1 * time.Second)
+			return
+		}
 		logger.Errorf("Failed to get task: %v", err)
 		return
-	}
 
-	if task == nil {
-		time.Sleep(1 * time.Second)
-		return
 	}
 
 	result, err := w.performOperation(task)
@@ -58,42 +54,22 @@ func (w *Worker) doWork() {
 		return
 	}
 
-	err = w.sendResult(task.ID, result)
+	err = w.sendResult(ctx, task.Id, result)
 	if err != nil {
 		logger.Errorf("Failed to send result: %v", err)
 	}
 }
 
-func (w *Worker) getTask() (*entities.AgentTask, error) {
-	url := fmt.Sprintf("%s/internal/task", w.orchestratorURL)
-	resp, err := w.client.Get(url)
+func (w *Worker) getTask(ctx context.Context) (*proto.Task, error) {
+	task, err := w.client.GetTask(ctx, &proto.GetTaskRequest{})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		logger.Infof("No tasks available")
-		return nil, nil
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		logger.Errorf("Unexpected status code: %d", resp.StatusCode)
-		return nil, fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
-	}
-
-	var task entities.AgentTask
-	err = json.NewDecoder(resp.Body).Decode(&task)
-	if err != nil {
-		logger.Errorf("Failed to decode response body: %v", err)
-		return nil, fmt.Errorf("Failed to decode response")
-	}
 	logger.Infof("Get task: %v", task)
-
-	return &task, nil
+	return task, nil
 }
 
-func (w *Worker) performOperation(task *entities.AgentTask) (float64, error) {
+func (w *Worker) performOperation(task *proto.Task) (float64, error) {
 	var result float64
 
 	switch task.Operation {
@@ -112,35 +88,18 @@ func (w *Worker) performOperation(task *entities.AgentTask) (float64, error) {
 		return 0, fmt.Errorf("unknown operation: %s", task.Operation)
 	}
 
-	time.Sleep(task.OperationTime)
+	time.Sleep(time.Duration(task.OperationTime))
 	return result, nil
 }
 
-func (w *Worker) sendResult(taskID string, result float64) error {
-	url := fmt.Sprintf("%s/internal/task", w.orchestratorURL)
-	payload := entities.TaskResult{
-		ID:     taskID,
+func (w *Worker) sendResult(ctx context.Context, taskID string, result float64) error {
+	_, err := w.client.SubmitResult(ctx, &proto.TaskResult{
+		Id:     taskID,
 		Result: result,
-	}
-
-	logger.Infof("Send result for task %s: %f", taskID, result)
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		logger.Errorf("Failed to marshal: %v", err)
-		return fmt.Errorf("Failed to marshal")
-	}
-
-	resp, err := w.client.Post(url, "application/json", bytes.NewBuffer(body))
+	})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		logger.Errorf("Unexpected status code: %d", resp.StatusCode)
-		return fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
-	}
-
+	logger.Infof("Send result for task %s: %f", taskID, result)
 	return nil
 }
